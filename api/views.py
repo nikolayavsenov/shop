@@ -1,7 +1,6 @@
-from django.shortcuts import render
 from rest_framework import generics, permissions
-from mag.app.models import *
-from mag.api.serializers import *
+from app.models import *
+from .serializers import *
 
 
 class PostList(generics.ListAPIView):
