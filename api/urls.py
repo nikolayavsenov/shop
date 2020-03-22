@@ -19,6 +19,9 @@ schema_view = get_schema_view(
 
 
 urlpatterns = [
+    path('cat-create/', views.CategoryCreate.as_view()),
+    path('cat-ops/<id>', views.CategoryOperations.as_view()),
+    path('category/', views.CatList.as_view()),
     path('post/', views.PostList.as_view()),
     path('cat/', views.CategoryList.as_view()),
     path('goods/', views.GoodsList.as_view()),

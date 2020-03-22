@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from app.models import *
+from rest_framework_recursive.fields import RecursiveField
 
 
 class PostAllSerializer(serializers.ModelSerializer):
@@ -24,3 +25,37 @@ class CommentAllSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = ('__all__')
+
+
+class CategoryParentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ('id', 'name',)
+
+
+class CategoryListSerializer(serializers.ModelSerializer):
+    parent = CategoryParentSerializer()
+
+    class Meta:
+        model = Category
+        fields = (
+            'id',
+            'name',
+            'description',
+            'published',
+            'parent',
+        )
+
+
+class CategoryOpsSerializer(serializers.ModelSerializer):
+    parent = RecursiveField
+
+    class Meta:
+        model = Category
+        fields = (
+            'id',
+            'name',
+            'description',
+            'published',
+            'parent'
+        )
