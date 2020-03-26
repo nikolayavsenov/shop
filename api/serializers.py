@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from app.models import *
 from rest_framework_recursive.fields import RecursiveField
+import datetime
 
 
 class PostAllSerializer(serializers.ModelSerializer):
@@ -16,6 +17,8 @@ class CategoryAllSerializer(serializers.ModelSerializer):
 
 
 class GoodsAllSerializer(serializers.ModelSerializer):
+    published_date = serializers.DateTimeField(default=timezone.now)
+
     class Meta:
         model = Goods
         fields = ('__all__')
@@ -58,4 +61,63 @@ class CategoryOpsSerializer(serializers.ModelSerializer):
             'description',
             'published',
             'parent'
+        )
+
+
+class PostCreateSerializer(serializers.ModelSerializer):
+    edit_date = serializers.DateTimeField(default=timezone.now, read_only=True)
+    published_date = serializers.DateTimeField(default=timezone.now)
+    created_date = serializers.DateTimeField(default=timezone.now, read_only=True)
+
+    class Meta:
+        model = Post
+        fields = (
+            #'author',
+            'title',
+            'category',
+            'text',
+            'slug',
+            'created_date',
+            'edit_date',
+            'published_date',
+            'published',
+            'status',
+        )
+
+
+class PostOpsSerializer(serializers.ModelSerializer):
+    edit_date = serializers.DateTimeField(default=timezone.now, read_only=True)
+
+    class Meta:
+        model = Post
+        fields = (
+            'author',
+            'title',
+            'category',
+            'text',
+            'slug',
+            'edit_date',
+            'published_date',
+            'published',
+            'status',
+        )
+
+
+class GoodsListSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Goods
+        fields = (
+            'name',
+            'manufacturer',
+            'issue_year',
+            'sort',
+            'published_date',
+            'photo',
+            'left',
+            'description',
+            'price',
+            'discount',
+            'category',
+            'slug',
         )

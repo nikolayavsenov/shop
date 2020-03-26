@@ -96,7 +96,7 @@ class Comment(models.Model):
 class Goods(models.Model):
     name = models.TextField(max_length=1000)
     manufacturer = models.TextField(max_length=1000)
-    issue_year = models.PositiveIntegerField
+    issue_year = models.PositiveIntegerField('Год выпуска', null=True, blank=True)  #допилить, не отображается при сериализации
     sort = models.PositiveIntegerField("Сортировка по приоритету", default=10)
     published_date = models.DateTimeField(
             "Дата публикации",
@@ -108,7 +108,7 @@ class Goods(models.Model):
     left = models.PositiveIntegerField('Остаточнок количество', default=0)
     description = models.TextField(max_length=1000)
     price = models.PositiveIntegerField('Цена', default=0)
-    discount = models.PositiveSmallIntegerField
+    discount = models.PositiveSmallIntegerField('Скидка', default=0) #допилить, не отображается при сериализации
     category = models.ForeignKey(
         Category,
         verbose_name='Категория',

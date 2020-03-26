@@ -16,8 +16,8 @@ class CategoryList(generics.ListAPIView):
     serializer_class = CategoryAllSerializer
 
 
-class GoodsList(generics.ListAPIView):
-    permission_classes = [permissions.AllowAny]
+class GoodsList(generics.ListCreateAPIView):
+    permission_classes = [permissions.IsAdminUser]
     queryset = Goods.objects.all()
     serializer_class = GoodsAllSerializer
 
@@ -26,6 +26,13 @@ class CommentList(generics.ListAPIView):
     permission_classes = [permissions.AllowAny]
     queryset = Comment.objects.all()
     serializer_class = CommentAllSerializer
+
+
+class GoodsOperations(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [permissions.IsAdminUser]
+    queryset = Goods.objects.all()
+    lookup_field = 'id'
+    serializer_class = GoodsListSerializer
 
 
 class CatList(generics.ListAPIView):
@@ -46,6 +53,18 @@ class CategoryCreate(generics.CreateAPIView):
     queryset = Category.objects.all()
     serializer_class = CategoryOpsSerializer
 
+
+class PostCreate(generics.CreateAPIView):
+    permission_classes = [permissions.IsAdminUser]
+    queryset = Post.objects.all()
+    serializer_class = PostCreateSerializer
+
+
+class PostOperations(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [permissions.IsAdminUser]
+    queryset = Post.objects.all()
+    lookup_field = 'id'
+    serializer_class = PostOpsSerializer
 
 
 
