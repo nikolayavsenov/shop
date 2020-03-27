@@ -10,10 +10,10 @@ class PostAllSerializer(serializers.ModelSerializer):
         fields = ('__all__')
 
 
-class CategoryAllSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Category
-        fields = ('__all__')
+# class CategoryAllSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = Category
+#         fields = ('__all__')
 
 
 class GoodsAllSerializer(serializers.ModelSerializer):
@@ -31,6 +31,7 @@ class CommentAllSerializer(serializers.ModelSerializer):
 
 
 class CategoryParentSerializer(serializers.ModelSerializer):
+    """Сериализаци родителя категории"""
     class Meta:
         model = Category
         fields = ('id', 'name',)
@@ -121,3 +122,19 @@ class GoodsListSerializer(serializers.ModelSerializer):
             'category',
             'slug',
         )
+
+
+class CartListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Cart
+        fields = ("__all__")
+
+
+class CartSerializer(serializers.ModelSerializer):
+    customer = serializers.PrimaryKeyRelatedField(read_only=True)
+    class Meta:
+        model = Cart
+        fields = ("__all__")
+
+
+

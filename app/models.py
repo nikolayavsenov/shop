@@ -2,6 +2,9 @@ from django.urls import reverse
 from mptt.models import MPTTModel
 from mptt.models import TreeForeignKey
 from django.contrib.auth.models import *
+from django.dispatch import receiver
+from django.db.models import signals
+from django.db.models.signals import post_save
 
 
 class Category(MPTTModel):
@@ -115,3 +118,28 @@ class Goods(models.Model):
         on_delete=models.CASCADE,
     )
     slug = models.SlugField('url', max_length=30)
+
+
+class Cart(models.Model):
+    customer = models.OneToOneField(
+        User,
+        verbose_name="Покупатель",
+        on_delete=models.CASCADE,
+    )
+    goods = models.ManyToManyField(
+        Goods,
+        verbose_name="Товары в корзине",
+        related_name='goods',
+    )
+    comment = models. CharField('Комментарий к заказу', max_length=1000, null=True, blank=True)
+
+
+@receiver(post_save, sender=User)
+def create_cart(sender, instance, **kwargs):
+    """Создаём пустую корзину для пользователя в момент создания"""
+    user = User.objects.get(username=instance)
+    print(user.id)
+    blank_cart = Cart()
+    blank_cart.customer = user
+    blank_cart.save()
+    print("Done!")
