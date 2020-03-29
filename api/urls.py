@@ -1,8 +1,9 @@
 from . import views
-from django.urls import path, include
+from django.urls import path, include, re_path
 from rest_framework import permissions
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
+from allauth.account.views import confirm_email, ConfirmEmailView, PasswordResetView
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -19,6 +20,7 @@ schema_view = get_schema_view(
 
 
 urlpatterns = [
+    re_path('rest-auth/registration/account-confirm-email/(?P<key>.+)/$', confirm_email, name='confirm_email'),
     path('cat-create/', views.CategoryCreate.as_view()),
     path('cat-ops/<id>', views.CategoryOperations.as_view()),
     path('category/', views.CatList.as_view()),
