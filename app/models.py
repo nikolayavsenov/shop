@@ -1,10 +1,12 @@
+from django.db import IntegrityError
+from django.db.transaction import TransactionManagementError
 from django.urls import reverse
 from mptt.models import MPTTModel
 from mptt.models import TreeForeignKey
 from django.contrib.auth.models import *
 from django.dispatch import receiver
-from django.db.models import signals
-from django.db.models.signals import post_save
+from allauth.account.signals import email_confirmed
+from django.db.models.signals import post_save, post_init
 
 
 class Category(MPTTModel):
@@ -29,7 +31,8 @@ class Category(MPTTModel):
         return self.name
 
     class Meta:
-        verbose_name = "Категории"
+        verbose_name = "Категория"
+        verbose_name_plural = "Категории"
 
 
 class Post(models.Model):
@@ -73,7 +76,8 @@ class Post(models.Model):
         return self.title
 
     class Meta:
-        verbose_name = "POST",
+        verbose_name = "Пост",
+        verbose_name_plural = "Посты"
         ordering = ['sort', '-published_date']
 
 
@@ -92,8 +96,12 @@ class Comment(models.Model):
         on_delete=models.CASCADE,
     )
 
+    def __str__(self):
+        return self.post
+
     class Meta:
-        verbose_name = "Комментарии"
+        verbose_name = "Комментарий"
+        verbose_name_plural = "Комментарии"
 
 
 class Goods(models.Model):
@@ -119,6 +127,13 @@ class Goods(models.Model):
     )
     slug = models.SlugField('url', max_length=30)
 
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = "Товар"
+        verbose_name_plural = "Товары"
+
 
 class Cart(models.Model):
     customer = models.OneToOneField(
@@ -133,13 +148,22 @@ class Cart(models.Model):
     )
     comment = models. CharField('Комментарий к заказу', max_length=1000, null=True, blank=True)
 
+    def __str__(self):
+        return str(self.customer)
+
+    class Meta:
+        ordering = ['-id']
+        verbose_name = "Корзина"
+        verbose_name_plural = "Корзины"
+
 
 @receiver(post_save, sender=User)
-def create_cart(sender, instance, **kwargs):
-    """Создаём пустую корзину для пользователя в момент создания"""
-    user = User.objects.get(username=instance)
-    print(user.id)
-    blank_cart = Cart()
-    blank_cart.customer = user
-    blank_cart.save()
-    print("Done!")
+def create_cart(sender, instance, created, **kwargs):
+    """Создаём пустую корзину для пользователя при успешной регистрации."""
+    if created:
+        blank_cart = Cart()
+        blank_cart.customer = User.objects.get(username=instance)
+        blank_cart.good = ""
+        blank_cart.comment = ""
+        blank_cart.save()
+    """Необходимо реализовать удаление корзины при удалении пользователя!"""

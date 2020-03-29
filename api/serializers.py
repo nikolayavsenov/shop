@@ -1,19 +1,12 @@
 from rest_framework import serializers
 from app.models import *
 from rest_framework_recursive.fields import RecursiveField
-import datetime
 
 
 class PostAllSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
         fields = ('__all__')
-
-
-# class CategoryAllSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Category
-#         fields = ('__all__')
 
 
 class GoodsAllSerializer(serializers.ModelSerializer):
