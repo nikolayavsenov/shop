@@ -60,7 +60,7 @@ class CategoryOpsSerializer(serializers.ModelSerializer):
 
 class PostCreateSerializer(serializers.ModelSerializer):
     edit_date = serializers.DateTimeField(default=timezone.now, read_only=True)
-    published_date = serializers.DateTimeField(default=timezone.now)
+    #published_date = serializers.DateTimeField(default=timezone.now)
     created_date = serializers.DateTimeField(default=timezone.now, read_only=True)
 
     class Meta:
@@ -73,7 +73,7 @@ class PostCreateSerializer(serializers.ModelSerializer):
             'slug',
             'created_date',
             'edit_date',
-            'published_date',
+            #'published_date',
             'published',
             'status',
         )
@@ -91,7 +91,7 @@ class PostOpsSerializer(serializers.ModelSerializer):
             'text',
             'slug',
             'edit_date',
-            'published_date',
+            #'published_date',
             'published',
             'status',
         )
@@ -125,9 +125,24 @@ class CartListSerializer(serializers.ModelSerializer):
 
 class CartSerializer(serializers.ModelSerializer):
     customer = serializers.PrimaryKeyRelatedField(read_only=True)
+
     class Meta:
         model = Cart
         fields = ("__all__")
+
+
+class FavoriteGoodsListSerializer(serializers.ModelSerializer):
+    good = GoodsListSerializer(many=True)
+
+    class Meta:
+        model = FavoriteGood
+        fields = ('good',)
+
+
+class FavoriteGoodCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FavoriteGood
+        fields = ('good',)
 
 
 

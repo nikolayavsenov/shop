@@ -1,3 +1,4 @@
+from django.http import HttpResponse
 from rest_framework.response import Response
 from rest_framework import generics, permissions
 from rest_framework.views import APIView
@@ -80,6 +81,32 @@ class CartList(generics.ListCreateAPIView):
 
     def filter_queryset(self, queryset):
         queryset = Cart.objects.filter(customer_id=self.request.user.pk)
+        return queryset
+
+
+class FavoriteList(generics.ListCreateAPIView):
+    """Избранное по токену"""
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = FavoriteGoodsListSerializer
+    queryset = FavoriteGood.objects.all()
+
+    def post(self, request):
+        serializer = FavoriteGoodCreateSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(client_id=request.user.pk)
+        return Response(status=201)
+
+    def delete(self, request):
+        #try:
+            data = request.data
+            favorite_good = FavoriteGood.objects.get(good=data['good'])
+            favorite_good.delete()
+            return Response(status=204)
+        # except:
+        #     return HttpResponse(status=404)
+
+    def filter_queryset(self, queryset):
+        queryset = FavoriteGood.objects.filter(client_id=self.request.user.pk)
         return queryset
 
 

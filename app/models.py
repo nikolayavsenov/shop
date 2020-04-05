@@ -55,12 +55,13 @@ class Post(models.Model):
             blank=True,
             null=True
     )
-    published_date = models.DateTimeField(
-            "Дата публикации",
-            default=timezone.now,
-            blank=True,
-            null=True
-    )
+    # https://trello.com/c/e7HSIK5r/14-%D0%BF%D0%BE%D1%81%D1%82%D1%8B#
+    # published_date = models.DateTimeField(
+    #         "Дата публикации",
+    #         default=timezone.now,
+    #         blank=True,
+    #         null=True
+    # )
 
     category = models.ForeignKey(
             Category,
@@ -78,7 +79,7 @@ class Post(models.Model):
     class Meta:
         verbose_name = "Пост",
         verbose_name_plural = "Посты"
-        ordering = ['sort', '-published_date']
+        ordering = ['sort', '-created_date']
 
 
 class Comment(models.Model):
@@ -155,6 +156,43 @@ class Cart(models.Model):
         ordering = ['-id']
         verbose_name = "Корзина"
         verbose_name_plural = "Корзины"
+
+
+class PromoCode(models.Model):
+    name = models.CharField('Название промо кода', max_length=20)
+    description = models.CharField('Описание промо кода', max_length=1000)
+    start_date = models.DateTimeField(default=timezone.now)
+    expiration_date = models.DateTimeField('Дата истечения действия')
+    goods = models.ManyToManyField(
+        Goods,
+        verbose_name='Промо код для товара',
+        related_name='promo_goods',
+    )
+    discount_value = models.SmallIntegerField('Размер скидки в %', default=0)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        ordering = ['-expiration_date']
+        verbose_name = 'Промо код'
+        verbose_name_plural = 'Промо коды'
+
+
+class FavoriteGood(models.Model):
+    client = models.ForeignKey(
+        User,
+        verbose_name='В избранном у пользователя',
+        on_delete=models.CASCADE
+    )
+    good = models.ManyToManyField(
+        Goods,
+        verbose_name='Товар в избранном',
+    )
+
+    class Meta:
+        verbose_name = 'Избранный товар',
+        verbose_name_plural = 'Избранные товары',
 
 
 @receiver(post_save, sender=User)

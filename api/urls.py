@@ -21,6 +21,7 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     re_path('rest-auth/registration/account-confirm-email/(?P<key>.+)/$', confirm_email, name='confirm_email'),
+    path('favorite/', views.FavoriteList.as_view()),
     path('cat-create/', views.CategoryCreate.as_view()),
     path('cat-ops/<id>', views.CategoryOperations.as_view()),
     path('category/', views.CatList.as_view()),
