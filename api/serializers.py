@@ -4,16 +4,35 @@ from rest_framework_recursive.fields import RecursiveField
 
 
 class PostAllSerializer(serializers.ModelSerializer):
+    author = serializers.CharField()
+    category = serializers.CharField()
     class Meta:
         model = Post
-        fields = ('__all__')
+        fields = (
+            'id',
+            'title',
+            'short_text',
+            'image',
+            'published',
+            'viewed',
+            'status',
+            'sort',
+            'author',
+            'category',
+                  )
 
 
 class GoodsAllSerializer(serializers.ModelSerializer):
     published_date = serializers.DateTimeField(default=timezone.now)
-
     class Meta:
         model = Goods
+        fields = ('__all__')
+
+
+class CommentOpsSerializer(serializers.ModelSerializer):
+    author = serializers.CharField()
+    class Meta:
+        model = Comment
         fields = ('__all__')
 
 
@@ -80,8 +99,9 @@ class PostCreateSerializer(serializers.ModelSerializer):
 
 
 class PostOpsSerializer(serializers.ModelSerializer):
-    edit_date = serializers.DateTimeField(default=timezone.now, read_only=True)
-
+    #edit_date = serializers.DateTimeField(default=timezone.now, read_only=True)
+    author = serializers.CharField()
+    category = serializers.CharField()
     class Meta:
         model = Post
         fields = (
@@ -89,8 +109,9 @@ class PostOpsSerializer(serializers.ModelSerializer):
             'title',
             'category',
             'text',
+            'image',
             'slug',
-            'edit_date',
+            #'edit_date',
             #'published_date',
             'published',
             'status',
@@ -117,10 +138,29 @@ class GoodsListSerializer(serializers.ModelSerializer):
         )
 
 
+class GoodsByCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Goods
+        fields = (
+            'name',
+            'manufacturer',
+            'issue_year',
+            'sort',
+            'published_date',
+            'photo',
+            'left',
+            'description',
+            'price',
+            'discount',
+            'category',
+            'slug',
+        )
+
+
 class CartListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Cart
-        fields = ("__all__")
+        fields = ('__all__')
 
 
 class CartSerializer(serializers.ModelSerializer):
@@ -128,7 +168,7 @@ class CartSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Cart
-        fields = ("__all__")
+        fields = ('__all__')
 
 
 class FavoriteGoodsListSerializer(serializers.ModelSerializer):
@@ -136,7 +176,7 @@ class FavoriteGoodsListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = FavoriteGood
-        fields = ('good',)
+        fields = ('__all__')
 
 
 class FavoriteGoodCreateSerializer(serializers.ModelSerializer):

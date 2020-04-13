@@ -45,7 +45,7 @@ class Post(models.Model):
     )
     title = models.CharField(max_length=1000)
     text = models.TextField(max_length=3000)
-    subtitle = models.TextField('Краткое описание', max_length=1000, blank=True, null=True)
+    short_text = models.TextField('Краткое описание', max_length=1000, blank=True, null=True)
     created_date = models.DateTimeField(auto_now=True)
     slug = models.SlugField('slug', max_length=15, unique=True)
     image = models.ImageField("Изображения", upload_to="post/", null=True, blank=True)
@@ -127,35 +127,69 @@ class Goods(models.Model):
         on_delete=models.CASCADE,
     )
     slug = models.SlugField('url', max_length=30)
+    short_text = models.CharField('Краткое описание', max_length=100, null=True)
+
+    # def is_favorite(self, request):
+    #     fav_goods = FavoriteGood.objects.values('id', 'client')
+    #     print(fav_goods)
+    #     if Goods.pk in int(fav_goods['id']) and request.user.pk in int(fav_goods['client']):
+    #         print(True)
+    #         return True
+    #     else:
+    #         print(False)
+    #         return False
 
     def __str__(self):
         return self.name
 
     class Meta:
+        ordering = ['-id']
         verbose_name = "Товар"
         verbose_name_plural = "Товары"
 
 
 class Cart(models.Model):
-    customer = models.OneToOneField(
+    customer = models.ForeignKey(
         User,
         verbose_name="Покупатель",
         on_delete=models.CASCADE,
     )
-    goods = models.ManyToManyField(
-        Goods,
-        verbose_name="Товары в корзине",
-        related_name='goods',
-    )
     comment = models. CharField('Комментарий к заказу', max_length=1000, null=True, blank=True)
+    total_price = models.PositiveIntegerField('Итоговая цена в корзине', default=0)
 
     def __str__(self):
         return str(self.customer)
 
     class Meta:
-        ordering = ['-id']
         verbose_name = "Корзина"
         verbose_name_plural = "Корзины"
+
+
+class GoodsInCart(models.Model):
+    cart = models.ForeignKey(
+        Cart,
+        verbose_name='Корзина',
+        on_delete=models.CASCADE,
+        related_name='cart'
+    )
+    good = models.ForeignKey(
+        Goods,
+        verbose_name='Товар',
+        on_delete=models.CASCADE
+    )
+    quantity = models.PositiveIntegerField('Единиц товара', default=0)
+    amount = models.PositiveIntegerField('Общая сумма', default=0)
+
+    class Meta:
+        verbose_name = 'Товар в корзине'
+        verbose_name_plural = 'Товары в корзине'
+
+    def save(self, *args, **kwargs):
+        self.amount = self.quantity*self.good.price
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return str(self.cart)
 
 
 class PromoCode(models.Model):
@@ -201,7 +235,6 @@ def create_cart(sender, instance, created, **kwargs):
     if created:
         blank_cart = Cart()
         blank_cart.customer = User.objects.get(username=instance)
-        blank_cart.good = ""
-        blank_cart.comment = ""
+        #blank_cart.good = ""
         blank_cart.save()
     """Необходимо реализовать удаление корзины при удалении пользователя!"""
