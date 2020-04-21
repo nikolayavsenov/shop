@@ -96,9 +96,17 @@ class Comment(models.Model):
         verbose_name='Посты',
         on_delete=models.CASCADE,
     )
+    parent_comment = models.OneToOneField(
+        'self',
+        verbose_name="Родительский комментарий",
+        on_delete=models.CASCADE,
+        null=True,
+        related_name='parent',
+        unique=True,#Вложенность на 1 уровне, ограничения фронте
+    )
 
     def __str__(self):
-        return self.post
+        return str(self.post)
 
     class Meta:
         verbose_name = "Комментарий"
@@ -154,8 +162,6 @@ class Cart(models.Model):
         verbose_name="Покупатель",
         on_delete=models.CASCADE,
     )
-    comment = models. CharField('Комментарий к заказу', max_length=1000, null=True, blank=True)
-    total_price = models.PositiveIntegerField('Итоговая цена в корзине', default=0)
 
     def __str__(self):
         return str(self.customer)
@@ -166,15 +172,14 @@ class Cart(models.Model):
 
 
 class GoodsInCart(models.Model):
-    cart = models.ForeignKey(
-        Cart,
-        verbose_name='Корзина',
-        on_delete=models.CASCADE,
-        related_name='cart'
-    )
     good = models.ForeignKey(
         Goods,
         verbose_name='Товар',
+        on_delete=models.CASCADE
+    )
+    cart = models.ForeignKey(
+        Cart,
+        verbose_name="Товар в корзине",
         on_delete=models.CASCADE
     )
     quantity = models.PositiveIntegerField('Единиц товара', default=0)
@@ -189,7 +194,7 @@ class GoodsInCart(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return str(self.cart)
+        return str(self.good)
 
 
 class PromoCode(models.Model):

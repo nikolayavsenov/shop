@@ -1,4 +1,5 @@
 from django.http import HttpResponse
+from django.views.generic.base import View
 from rest_framework.response import Response
 from rest_framework import generics, permissions
 from rest_framework.views import APIView
@@ -6,6 +7,7 @@ from app.models import *
 from .serializers import *
 from rest_framework.mixins import CreateModelMixin
 from .paginations import PostPagination
+from random import sample
 
 
 class PostList(generics.ListAPIView):
@@ -40,6 +42,17 @@ class GoodsByCategory(generics.ListAPIView):
         return Goods.objects.filter(category=self.kwargs['category'])
 
 
+class RandomGoods(generics.ListAPIView):
+    permission_classes = [permissions.AllowAny]
+    queryset = Goods.objects.order_by('?')[:3]
+    serializer_class = GoodsAllSerializer
+
+    # def get_queryset(self):
+    #     count = Goods.objects.all().count()
+    #     random_ids = sample(range(1, count), 3)
+    #     return Goods.objects.filter(id__in=random_ids)
+
+
 class CommentList(generics.ListCreateAPIView):
     """Список всех комментариев"""
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
@@ -65,7 +78,7 @@ class CommentsById(generics.ListAPIView):
 
 class GoodsOperations(generics.RetrieveUpdateDestroyAPIView):
     """Операции с товарами"""
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     queryset = Goods.objects.all()
     lookup_field = 'id'
     serializer_class = GoodsListSerializer
@@ -80,7 +93,7 @@ class CatList(generics.ListAPIView):
 
 class CategoryOperations(generics.RetrieveUpdateDestroyAPIView):
     """Операции с категориями"""
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     queryset = Category.objects.all()
     lookup_field = 'id'
     serializer_class = CategoryOpsSerializer
@@ -88,14 +101,14 @@ class CategoryOperations(generics.RetrieveUpdateDestroyAPIView):
 
 class CategoryCreate(generics.CreateAPIView):
     """Создание категорий"""
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     queryset = Category.objects.all()
     serializer_class = CategoryOpsSerializer
 
 
 class PostCreate(generics.CreateAPIView):
     """Создание постов"""
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     queryset = Post.objects.all()
     serializer_class = PostCreateSerializer
 
@@ -108,7 +121,7 @@ class PostOperations(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = PostOpsSerializer
 
 
-class CartList(generics.ListCreateAPIView):
+class CartList(generics.ListAPIView):
     """Возвращает содержимое корзины пользователя по токену"""
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = CartListSerializer
@@ -117,6 +130,34 @@ class CartList(generics.ListCreateAPIView):
     def filter_queryset(self, queryset):
         queryset = Cart.objects.filter(customer_id=self.request.user.pk)
         return queryset
+
+
+class AddGoodToCart(generics.ListCreateAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = GoodsInCart.objects.all()
+    serializer_class = PostGoodsInCartSerializer
+
+    def get_queryset(self):
+        return GoodsInCart.objects.filter(cart__customer__pk=self.request.user.pk)
+
+    def get(self, request):
+        serializer = GoodsInCartSerializer(self.get_queryset(),
+                                           many=True,
+                                           context={'request': request})#Построение корректного image url
+        page = self.paginate_queryset(self.get_queryset())
+        if page is not None:
+            return self.get_paginated_response(serializer.data)
+        return Response(serializer.data)
+
+
+class GoodsInCartEdit(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    lookup_field = 'id'
+    queryset = GoodsInCart.objects.all()
+    serializer_class = GoodsInCartSerializer
+
+    def get_queryset(self):
+        return GoodsInCart.objects.filter(cart__customer__pk=self.request.user.pk)
 
 
 class FavoriteList(generics.ListCreateAPIView):
@@ -155,21 +196,6 @@ class CartOps(generics.UpdateAPIView):
     serializer_class = CartSerializer
     lookup_field = "id"
     queryset = Cart.objects.all()
-
-    def filter_queryset(self, queryset):
-        queryset = Cart.objects.filter(customer_id=self.request.user.pk)
-        return queryset
-
-
-class CartEdit(generics.UpdateAPIView):
-    permission_classes = [permissions.IsAuthenticated]
-    lookup_field = "id"
-    serializer_class = CartSerializer
-    queryset = Cart.objects.all()
-
-    def perform_update(self, serializer):
-        print(serializer)
-        serializer.create()
 
     def filter_queryset(self, queryset):
         queryset = Cart.objects.filter(customer_id=self.request.user.pk)

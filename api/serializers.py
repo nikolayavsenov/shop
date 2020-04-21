@@ -157,6 +157,36 @@ class GoodsByCategorySerializer(serializers.ModelSerializer):
         )
 
 
+class GoodsDescriptionInCartSerializer(serializers.ModelSerializer):
+    photo = serializers.ImageField(max_length=None, use_url=True)
+    class Meta:
+        model = Goods
+        fields = (
+            'id',
+            'name',
+            'short_text',
+            'price',
+            'photo',
+        )
+
+
+class GoodsInCartSerializer(serializers.ModelSerializer):
+    amount = serializers.IntegerField(read_only=True)
+    good = GoodsDescriptionInCartSerializer()
+
+    class Meta:
+        model = GoodsInCart
+        fields = ('__all__')
+
+
+class PostGoodsInCartSerializer(serializers.ModelSerializer):
+    amount = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = GoodsInCart
+        fields = ('__all__')
+
+
 class CartListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Cart
@@ -165,7 +195,6 @@ class CartListSerializer(serializers.ModelSerializer):
 
 class CartSerializer(serializers.ModelSerializer):
     customer = serializers.PrimaryKeyRelatedField(read_only=True)
-
     class Meta:
         model = Cart
         fields = ('__all__')
