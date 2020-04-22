@@ -36,6 +36,7 @@ urlpatterns = [
     path('goods-random/', views.RandomGoods.as_view()),
     path('comments/', views.CommentList.as_view()),
     path('comments/post_id=<int:post>', views.CommentsById.as_view()),
+    path('comments/<int:id>', views.CreateSubComment.as_view()),
     path('comment-ops/<int:pk>', views.CommentOps.as_view()),
     path('carts/', views.CartList.as_view()),
     path('carts-ops/<id>', views.CartOps.as_view()),

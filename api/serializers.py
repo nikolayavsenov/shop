@@ -29,14 +29,26 @@ class GoodsAllSerializer(serializers.ModelSerializer):
         fields = ('__all__')
 
 
+class ChildCommentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Comment
+        fields = (
+            'author',
+            'text',
+            'created_date',
+        )
+
+
 class CommentOpsSerializer(serializers.ModelSerializer):
     author = serializers.CharField()
+    child_comment = ChildCommentSerializer()
     class Meta:
         model = Comment
         fields = ('__all__')
 
 
 class CommentAllSerializer(serializers.ModelSerializer):
+    child_comment = ChildCommentSerializer(read_only=True)
     class Meta:
         model = Comment
         fields = ('__all__')

@@ -60,6 +60,24 @@ class CommentList(generics.ListCreateAPIView):
     serializer_class = CommentAllSerializer
 
 
+class CreateSubComment(generics.ListCreateAPIView):
+    """Список всех комментариев"""
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    queryset = Comment.objects.all()
+    serializer_class = CommentAllSerializer
+
+    def post(self, request, id):
+        """Костыль для фронта, обработка комментариев родитель-дитя"""
+        parent = Comment.objects.get(id=id)
+        serializer = CommentAllSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            child = Comment.objects.get(id=serializer.data['id'])
+            parent.child_comment = child
+            parent.save()
+        return Response(serializer.data, status=201)
+
+
 class CommentOps(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     queryset = Comment.objects.all()

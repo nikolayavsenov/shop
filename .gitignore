@@ -1,5 +1,4 @@
 idea
 .idea
 venv
-mag.__pycache__
-app.__pycache__
+*.__pycache__

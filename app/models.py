@@ -1,3 +1,4 @@
+from django.core.validators import MinValueValidator
 from django.db import IntegrityError
 from django.db.transaction import TransactionManagementError
 from django.urls import reverse
@@ -95,8 +96,9 @@ class Comment(models.Model):
         Post,
         verbose_name='Посты',
         on_delete=models.CASCADE,
+        null=True,
     )
-    parent_comment = models.OneToOneField(
+    child_comment = models.OneToOneField(
         'self',
         verbose_name="Родительский комментарий",
         on_delete=models.CASCADE,
@@ -182,7 +184,10 @@ class GoodsInCart(models.Model):
         verbose_name="Товар в корзине",
         on_delete=models.CASCADE
     )
-    quantity = models.PositiveIntegerField('Единиц товара', default=0)
+    quantity = models.PositiveIntegerField(
+        'Единиц товара',
+        default=1,
+        validators=[MinValueValidator(1)])
     amount = models.PositiveIntegerField('Общая сумма', default=0)
 
     class Meta:
@@ -194,7 +199,7 @@ class GoodsInCart(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return str(self.good)
+        return str(self.cart)
 
 
 class PromoCode(models.Model):
@@ -242,4 +247,3 @@ def create_cart(sender, instance, created, **kwargs):
         blank_cart.customer = User.objects.get(username=instance)
         #blank_cart.good = ""
         blank_cart.save()
-    """Необходимо реализовать удаление корзины при удалении пользователя!"""
