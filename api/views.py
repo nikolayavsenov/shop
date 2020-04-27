@@ -156,7 +156,7 @@ class AddGoodToCart(generics.ListCreateAPIView):
     serializer_class = PostGoodsInCartSerializer
 
     def get_queryset(self):
-        return GoodsInCart.objects.filter(cart__customer__pk=self.request.user.pk)
+        return GoodsInCart.objects.filter(cart__customer__pk=self.request.user.pk).filter(cart__accepted=False)
 
     def get(self, request):
         serializer = GoodsInCartSerializer(self.get_queryset(),
@@ -217,6 +217,39 @@ class CartOps(generics.UpdateAPIView):
 
     def filter_queryset(self, queryset):
         queryset = Cart.objects.filter(customer_id=self.request.user.pk)
+        return queryset
+
+
+class OrderList(generics.ListCreateAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = OrderSerializer
+    queryset = Order.objects.all()
+
+    def perform_create(self, serializer):
+        cart_id = Cart.objects.get(customer=self.request.user, accepted=False)
+        new_cart = Cart.objects.create(customer=self.request.user)
+        serializer.save(cart=cart_id)
+        new_cart.save()
+
+
+class OrderHistory(generics.ListAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = OrderHistorySerializer
+    queryset = Order.objects.all()
+
+    def get_queryset(self):
+        queryset = Order.objects.filter(cart__customer=self.request.user)
+        return queryset
+
+
+class OrderListInHistory(generics.ListAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = GoodsInCartSerializer
+    lookup_field = 'id'
+
+    def get_queryset(self):
+        cart_id = Order.objects.values('cart').get(id=self.kwargs['id'])
+        queryset = GoodsInCart.objects.filter(cart=cart_id['cart'])
         return queryset
 
 

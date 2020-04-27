@@ -164,6 +164,7 @@ class Cart(models.Model):
         verbose_name="Покупатель",
         on_delete=models.CASCADE,
     )
+    accepted = models.BooleanField("Принято к заказу", default=False)
 
     def __str__(self):
         return str(self.customer)
@@ -237,6 +238,22 @@ class FavoriteGood(models.Model):
     class Meta:
         verbose_name = 'Избранный товар',
         verbose_name_plural = 'Избранные товары',
+
+
+class Order(models.Model):
+    cart = models.ForeignKey(Cart, verbose_name='Корзина', on_delete=models.CASCADE)
+    comment = models.CharField(verbose_name="Комментарий к заказу", max_length=1000, null=True)
+    accepted = models.BooleanField(verbose_name="Заказ выполнен", default=False)
+    date = models.DateTimeField('Дата заказа', default=timezone.now())
+    amount = models.IntegerField('Общая сумма заказа', default=0)
+
+    def save(self, *args, **kwargs):
+        for item in GoodsInCart.objects.filter(cart=self.cart):
+            self.amount += item.amount
+        current_cart = self.cart
+        current_cart.accepted = True
+        current_cart.save()
+        super().save(*args, **kwargs)
 
 
 @receiver(post_save, sender=User)

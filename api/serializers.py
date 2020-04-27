@@ -30,9 +30,11 @@ class GoodsAllSerializer(serializers.ModelSerializer):
 
 
 class ChildCommentSerializer(serializers.ModelSerializer):
+    author = serializers.CharField()
     class Meta:
         model = Comment
         fields = (
+            'id',
             'author',
             'text',
             'created_date',
@@ -224,6 +226,23 @@ class FavoriteGoodCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = FavoriteGood
         fields = ('good',)
+
+
+class OrderSerializer(serializers.ModelSerializer):
+    amount = serializers.IntegerField(read_only=True)
+    date = serializers.DateTimeField(read_only=True)
+    accepted = serializers.BooleanField(read_only=True)
+    cart = serializers.PrimaryKeyRelatedField(read_only=True)
+
+    class Meta:
+        model = Order
+        fields = ('__all__')
+
+
+class OrderHistorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Order
+        fields = ('id', 'date', 'amount',)
 
 
 
