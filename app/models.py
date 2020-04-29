@@ -8,6 +8,7 @@ from django.contrib.auth.models import *
 from django.dispatch import receiver
 from allauth.account.signals import email_confirmed
 from django.db.models.signals import post_save, post_init
+from rest_framework.fields import CurrentUserDefault
 
 
 class Category(MPTTModel):
@@ -98,13 +99,11 @@ class Comment(models.Model):
         on_delete=models.CASCADE,
         null=True,
     )
-    child_comment = models.OneToOneField(
+    child_comment = models.ManyToManyField(
         'self',
-        verbose_name="Родительский комментарий",
-        on_delete=models.CASCADE,
-        null=True,
+        verbose_name="Дочерний комментарий",
+        blank=True,
         related_name='parent',
-        unique=True,#Вложенность на 1 уровне, ограничения фронте
     )
 
     def __str__(self):
@@ -138,16 +137,6 @@ class Goods(models.Model):
     )
     slug = models.SlugField('url', max_length=30)
     short_text = models.CharField('Краткое описание', max_length=100, null=True)
-
-    # def is_favorite(self, request):
-    #     fav_goods = FavoriteGood.objects.values('id', 'client')
-    #     print(fav_goods)
-    #     if Goods.pk in int(fav_goods['id']) and request.user.pk in int(fav_goods['client']):
-    #         print(True)
-    #         return True
-    #     else:
-    #         print(False)
-    #         return False
 
     def __str__(self):
         return self.name
@@ -244,7 +233,7 @@ class Order(models.Model):
     cart = models.ForeignKey(Cart, verbose_name='Корзина', on_delete=models.CASCADE)
     comment = models.CharField(verbose_name="Комментарий к заказу", max_length=1000, null=True)
     accepted = models.BooleanField(verbose_name="Заказ выполнен", default=False)
-    date = models.DateTimeField('Дата заказа', default=timezone.now())
+    date = models.DateTimeField('Дата заказа', default=timezone.now)
     amount = models.IntegerField('Общая сумма заказа', default=0)
 
     def save(self, *args, **kwargs):

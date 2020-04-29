@@ -1,5 +1,6 @@
 from django.http import HttpResponse
 from django.views.generic.base import View
+from rest_auth.views import LoginView
 from rest_framework.response import Response
 from rest_framework import generics, permissions
 from rest_framework.views import APIView
@@ -25,11 +26,6 @@ class GoodsList(generics.ListCreateAPIView):
     serializer_class = GoodsAllSerializer
     pagination_class = PostPagination
 
-    #def get(self, queryset):
-        #permission_classes = [permissions.AllowAny]
-        #serializer = GoodsAllSerializer(queryset)
-        #return Response(serializer.data)
-
 
 class GoodsByCategory(generics.ListAPIView):
     permission_classes = [permissions.AllowAny]
@@ -41,16 +37,14 @@ class GoodsByCategory(generics.ListAPIView):
     def get_queryset(self):
         return Goods.objects.filter(category=self.kwargs['category'])
 
+    def get_serializer_context(self):
+        return {'request': self.request}
+
 
 class RandomGoods(generics.ListAPIView):
     permission_classes = [permissions.AllowAny]
     queryset = Goods.objects.order_by('?')[:3]
     serializer_class = GoodsAllSerializer
-
-    # def get_queryset(self):
-    #     count = Goods.objects.all().count()
-    #     random_ids = sample(range(1, count), 3)
-    #     return Goods.objects.filter(id__in=random_ids)
 
 
 class CommentList(generics.ListCreateAPIView):
@@ -72,9 +66,10 @@ class CreateSubComment(generics.ListCreateAPIView):
         serializer = CommentAllSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            child = Comment.objects.get(id=serializer.data['id'])
-            parent.child_comment = child
-            parent.save()
+        child = Comment.objects.get(id=serializer.data['id'])
+        parent.child_comment.add(child)
+        print(request.data)
+        print(request.META.get('REMOTE_ADDR'))
         return Response(serializer.data, status=201)
 
 
@@ -158,14 +153,11 @@ class AddGoodToCart(generics.ListCreateAPIView):
     def get_queryset(self):
         return GoodsInCart.objects.filter(cart__customer__pk=self.request.user.pk).filter(cart__accepted=False)
 
-    def get(self, request):
-        serializer = GoodsInCartSerializer(self.get_queryset(),
-                                           many=True,
-                                           context={'request': request})#Построение корректного image url
-        page = self.paginate_queryset(self.get_queryset())
-        if page is not None:
-            return self.get_paginated_response(serializer.data)
-        return Response(serializer.data)
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return GoodsInCartSerializer
+        else:
+            return self.serializer_class
 
 
 class GoodsInCartEdit(generics.RetrieveUpdateDestroyAPIView):
@@ -251,6 +243,18 @@ class OrderListInHistory(generics.ListAPIView):
         cart_id = Order.objects.values('cart').get(id=self.kwargs['id'])
         queryset = GoodsInCart.objects.filter(cart=cart_id['cart'])
         return queryset
+
+
+class CustomLoginView(LoginView):
+    """Логин"""
+    def get_response_serializer(self):
+        response_serializer = LoginSerializer
+        return response_serializer
+
+
+
+
+
 
 
 

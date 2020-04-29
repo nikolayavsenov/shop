@@ -1,4 +1,7 @@
+from rest_auth.models import TokenModel
 from rest_framework import serializers
+from rest_framework.fields import CurrentUserDefault
+
 from app.models import *
 from rest_framework_recursive.fields import RecursiveField
 
@@ -24,9 +27,32 @@ class PostAllSerializer(serializers.ModelSerializer):
 
 class GoodsAllSerializer(serializers.ModelSerializer):
     published_date = serializers.DateTimeField(default=timezone.now)
+    in_favorite = serializers.SerializerMethodField(read_only=True)
+    in_cart = serializers.SerializerMethodField(read_only=True)
     class Meta:
         model = Goods
         fields = ('__all__')
+
+    def get_in_favorite(self, instance):  # необходимо проверить бд под нагрузкой
+            """Является ли товар в избранном у пользователя"""
+            user = self.context['request'].user
+            try:
+                fav = FavoriteGood.objects.get(good=instance, client=user)
+                if fav is not None:
+                    return True
+            except:
+                pass
+            return False
+
+    def get_in_cart(self, instance):
+            user = self.context['request'].user
+            try:
+                cart = GoodsInCart.objects.get(cart__customer=user, cart__accepted=False, good=instance)
+                if cart is not None:
+                    return True
+            except:
+                pass
+            return False
 
 
 class ChildCommentSerializer(serializers.ModelSerializer):
@@ -43,14 +69,14 @@ class ChildCommentSerializer(serializers.ModelSerializer):
 
 class CommentOpsSerializer(serializers.ModelSerializer):
     author = serializers.CharField()
-    child_comment = ChildCommentSerializer()
+    child_comment = ChildCommentSerializer(many=True)
     class Meta:
         model = Comment
         fields = ('__all__')
 
 
 class CommentAllSerializer(serializers.ModelSerializer):
-    child_comment = ChildCommentSerializer(read_only=True)
+    child_comment = ChildCommentSerializer(read_only=True, many=True)
     class Meta:
         model = Comment
         fields = ('__all__')
@@ -133,11 +159,14 @@ class PostOpsSerializer(serializers.ModelSerializer):
 
 
 class GoodsListSerializer(serializers.ModelSerializer):
-
+    in_cart = serializers.SerializerMethodField(read_only=True)
+    in_favorite = serializers.SerializerMethodField(read_only=True)
     class Meta:
         model = Goods
         fields = (
             'name',
+            'in_cart',
+            'in_favorite',
             'manufacturer',
             'issue_year',
             'sort',
@@ -150,13 +179,38 @@ class GoodsListSerializer(serializers.ModelSerializer):
             'category',
             'slug',
         )
+
+    def get_in_favorite(self, instance):# необходимо проверить бд под нагрузкой
+        """Является ли товар в избранном у пользователя"""
+        user = self.context['request'].user
+        try:
+            fav = FavoriteGood.objects.get(good=instance, client=user)
+            if fav is not None:
+                return True
+        except:
+            pass
+        return False
+
+    def get_in_cart(self, instance):
+        user = self.context['request'].user
+        try:
+            cart = GoodsInCart.objects.get(cart__customer=user, cart__accepted=False, good=instance)
+            if cart is not None:
+                return True
+        except:
+            pass
+        return False
 
 
 class GoodsByCategorySerializer(serializers.ModelSerializer):
+    in_cart = serializers.SerializerMethodField(read_only=True)
+    in_favorite = serializers.SerializerMethodField(read_only=True)
     class Meta:
         model = Goods
         fields = (
             'name',
+            'in_cart',
+            'in_favorite',
             'manufacturer',
             'issue_year',
             'sort',
@@ -169,6 +223,27 @@ class GoodsByCategorySerializer(serializers.ModelSerializer):
             'category',
             'slug',
         )
+
+    def get_in_favorite(self, instance):  # необходимо проверить бд под нагрузкой
+            """Является ли товар в избранном у пользователя"""
+            user = self.context['request'].user
+            try:
+                fav = FavoriteGood.objects.get(good=instance, client=user)
+                if fav is not None:
+                    return True
+            except:
+                pass
+            return False
+
+    def get_in_cart(self, instance):
+            user = self.context['request'].user
+            try:
+                cart = GoodsInCart.objects.get(cart__customer=user, cart__accepted=False, good=instance)
+                if cart is not None:
+                    return True
+            except:
+                pass
+            return False
 
 
 class GoodsDescriptionInCartSerializer(serializers.ModelSerializer):
@@ -187,11 +262,9 @@ class GoodsDescriptionInCartSerializer(serializers.ModelSerializer):
 class GoodsInCartSerializer(serializers.ModelSerializer):
     amount = serializers.IntegerField(read_only=True)
     good = GoodsDescriptionInCartSerializer()
-
     class Meta:
         model = GoodsInCart
         fields = ('__all__')
-
 
 class PostGoodsInCartSerializer(serializers.ModelSerializer):
     amount = serializers.IntegerField(read_only=True)
@@ -243,6 +316,24 @@ class OrderHistorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = ('id', 'date', 'amount',)
+
+
+class UserDetailInLoginSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'username',)
+
+
+class LoginSerializer(serializers.ModelSerializer):
+    user = UserDetailInLoginSerializer()
+    class Meta:
+        model = TokenModel
+        fields = ('key', 'user',)
+
+
+
+
+
 
 
 
