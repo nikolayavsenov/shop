@@ -1,7 +1,14 @@
+from django.core.validators import MinValueValidator
+from django.db import IntegrityError
+from django.db.transaction import TransactionManagementError
 from django.urls import reverse
 from mptt.models import MPTTModel
 from mptt.models import TreeForeignKey
 from django.contrib.auth.models import *
+from django.dispatch import receiver
+from allauth.account.signals import email_confirmed
+from django.db.models.signals import post_save, post_init
+from rest_framework.fields import CurrentUserDefault
 
 
 class Category(MPTTModel):
@@ -26,7 +33,8 @@ class Category(MPTTModel):
         return self.name
 
     class Meta:
-        verbose_name = "Категории"
+        verbose_name = "Категория"
+        verbose_name_plural = "Категории"
 
 
 class Post(models.Model):
@@ -39,7 +47,7 @@ class Post(models.Model):
     )
     title = models.CharField(max_length=1000)
     text = models.TextField(max_length=3000)
-    subtitle = models.TextField('Краткое описание', max_length=1000, blank=True, null=True)
+    short_text = models.TextField('Краткое описание', max_length=1000, blank=True, null=True)
     created_date = models.DateTimeField(auto_now=True)
     slug = models.SlugField('slug', max_length=15, unique=True)
     image = models.ImageField("Изображения", upload_to="post/", null=True, blank=True)
@@ -49,12 +57,13 @@ class Post(models.Model):
             blank=True,
             null=True
     )
-    published_date = models.DateTimeField(
-            "Дата публикации",
-            default=timezone.now,
-            blank=True,
-            null=True
-    )
+    # https://trello.com/c/e7HSIK5r/14-%D0%BF%D0%BE%D1%81%D1%82%D1%8B#
+    # published_date = models.DateTimeField(
+    #         "Дата публикации",
+    #         default=timezone.now,
+    #         blank=True,
+    #         null=True
+    # )
 
     category = models.ForeignKey(
             Category,
@@ -70,8 +79,9 @@ class Post(models.Model):
         return self.title
 
     class Meta:
-        verbose_name = "POST",
-        ordering = ['sort', '-published_date']
+        verbose_name = "Пост",
+        verbose_name_plural = "Посты"
+        ordering = ['sort', '-created_date']
 
 
 class Comment(models.Model):
@@ -87,16 +97,27 @@ class Comment(models.Model):
         Post,
         verbose_name='Посты',
         on_delete=models.CASCADE,
+        null=True,
+    )
+    child_comment = models.ManyToManyField(
+        'self',
+        verbose_name="Дочерний комментарий",
+        blank=True,
+        related_name='parent',
     )
 
+    def __str__(self):
+        return str(self.post)
+
     class Meta:
-        verbose_name = "Комментарии"
+        verbose_name = "Комментарий"
+        verbose_name_plural = "Комментарии"
 
 
 class Goods(models.Model):
     name = models.TextField(max_length=1000)
     manufacturer = models.TextField(max_length=1000)
-    issue_year = models.PositiveIntegerField
+    issue_year = models.PositiveIntegerField('Год выпуска', null=True, blank=True)  #допилить, не отображается при сериализации
     sort = models.PositiveIntegerField("Сортировка по приоритету", default=10)
     published_date = models.DateTimeField(
             "Дата публикации",
@@ -108,10 +129,127 @@ class Goods(models.Model):
     left = models.PositiveIntegerField('Остаточнок количество', default=0)
     description = models.TextField(max_length=1000)
     price = models.PositiveIntegerField('Цена', default=0)
-    discount = models.PositiveSmallIntegerField
+    discount = models.PositiveSmallIntegerField('Скидка', default=0) #допилить, не отображается при сериализации
     category = models.ForeignKey(
         Category,
         verbose_name='Категория',
         on_delete=models.CASCADE,
     )
     slug = models.SlugField('url', max_length=30)
+    short_text = models.CharField('Краткое описание', max_length=100, null=True)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        ordering = ['-id']
+        verbose_name = "Товар"
+        verbose_name_plural = "Товары"
+
+
+class Cart(models.Model):
+    customer = models.ForeignKey(
+        User,
+        verbose_name="Покупатель",
+        on_delete=models.CASCADE,
+    )
+    accepted = models.BooleanField("Принято к заказу", default=False)
+
+    def __str__(self):
+        return str(self.customer)
+
+    class Meta:
+        verbose_name = "Корзина"
+        verbose_name_plural = "Корзины"
+
+
+class GoodsInCart(models.Model):
+    good = models.ForeignKey(
+        Goods,
+        verbose_name='Товар',
+        on_delete=models.CASCADE
+    )
+    cart = models.ForeignKey(
+        Cart,
+        verbose_name="Товар в корзине",
+        on_delete=models.CASCADE
+    )
+    quantity = models.PositiveIntegerField(
+        'Единиц товара',
+        default=1,
+        validators=[MinValueValidator(1)])
+    amount = models.PositiveIntegerField('Общая сумма', default=0)
+
+    class Meta:
+        verbose_name = 'Товар в корзине'
+        verbose_name_plural = 'Товары в корзине'
+
+    def save(self, *args, **kwargs):
+        self.amount = self.quantity*self.good.price
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return str(self.cart)
+
+
+class PromoCode(models.Model):
+    name = models.CharField('Название промо кода', max_length=20)
+    description = models.CharField('Описание промо кода', max_length=1000)
+    start_date = models.DateTimeField(default=timezone.now)
+    expiration_date = models.DateTimeField('Дата истечения действия')
+    goods = models.ManyToManyField(
+        Goods,
+        verbose_name='Промо код для товара',
+        related_name='promo_goods',
+    )
+    discount_value = models.SmallIntegerField('Размер скидки в %', default=0)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        ordering = ['-expiration_date']
+        verbose_name = 'Промо код'
+        verbose_name_plural = 'Промо коды'
+
+
+class FavoriteGood(models.Model):
+    client = models.ForeignKey(
+        User,
+        verbose_name='В избранном у пользователя',
+        on_delete=models.CASCADE
+    )
+    good = models.ManyToManyField(
+        Goods,
+        verbose_name='Товар в избранном',
+    )
+
+    class Meta:
+        verbose_name = 'Избранный товар',
+        verbose_name_plural = 'Избранные товары',
+
+
+class Order(models.Model):
+    cart = models.ForeignKey(Cart, verbose_name='Корзина', on_delete=models.CASCADE)
+    comment = models.CharField(verbose_name="Комментарий к заказу", max_length=1000, null=True)
+    accepted = models.BooleanField(verbose_name="Заказ выполнен", default=False)
+    date = models.DateTimeField('Дата заказа', default=timezone.now)
+    amount = models.IntegerField('Общая сумма заказа', default=0)
+
+    def save(self, *args, **kwargs):
+        for item in GoodsInCart.objects.filter(cart=self.cart):
+            self.amount += item.amount
+        current_cart = self.cart
+        current_cart.accepted = True
+        current_cart.save()
+        super().save(*args, **kwargs)
+
+
+@receiver(post_save, sender=User)
+def create_cart(sender, instance, created, **kwargs):
+    """Создаём пустую корзину для пользователя при успешной регистрации."""
+    if created:
+        blank_cart = Cart()
+        blank_cart.customer = User.objects.get(username=instance)
+        #blank_cart.good = ""
+        blank_cart.save()
