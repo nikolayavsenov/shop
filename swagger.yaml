@@ -1,0 +1,2328 @@
+swagger: '2.0'
+info:
+  title: Shop API
+  description: Some desc
+  termsOfService: https://www.google.com/policies/terms/
+  contact:
+    email: contact@snippets.local
+  license:
+    name: BSD License
+  version: v1
+host: 77.66.177.88:8181
+schemes:
+  - http
+basePath: /api/v1
+consumes:
+  - application/json
+produces:
+  - application/json
+securityDefinitions:
+  Basic:
+    type: basic
+security:
+  - Basic: []
+paths:
+  /cart-edit/{id}:
+    get:
+      operationId: cart-edit_read
+      summary: Элемент корзины
+      description: 'Получение элемента корзин по токену.'
+      parameters: []
+      responses:
+        '200':
+          description: 'Вернули.'
+          schema:
+            $ref: '#/definitions/GoodsInCart'
+        '404':
+          description: 'Элемент не существует или не является элементом корзины пользователя.'
+      tags:
+        - cart-edit
+    put:
+      operationId: cart-edit_update
+      summary: Обновление элемента корзины
+      description: 'Обновление элемента корзины по токену.'
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/GoodsInCart4'
+      responses:
+        '200':
+          description: 'Обновлено.'
+          schema:
+            $ref: '#/definitions/GoodsInCart'
+        '404':
+          description: 'Элемент не существует или не является элементом корзины пользователя.'
+      tags:
+        - cart-edit
+    patch:
+      operationId: cart-edit_partial_update
+      summary: Редактирование элемента корзины
+      description: 'Редактирование элемента корзины по токену'
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/GoodsInCart4'
+      responses:
+        '200':
+          description: 'Отредактировано.'
+          schema:
+            $ref: '#/definitions/GoodsInCart'
+        '404':
+          description: 'Элемент не существует или не является элементом корзины пользователя.'
+      tags:
+        - cart-edit
+    delete:
+      operationId: cart-edit_delete
+      summary: Удаление элемента корзины
+      description: 'Удаление элемента корзины по токену'
+      parameters: []
+      responses:
+        '204':
+          description: 'Удалено.'
+        '404':
+          description: 'Элемент не существует или не является элементом корзины пользователя.'
+      tags:
+        - cart-edit
+    parameters:
+      - name: id
+        in: path
+        description: "ID товара в корзине"
+        required: true
+        type: integer
+  /carts/:
+    get:
+      operationId: carts_list
+      summary: Полный состав корзины
+      description: "Возвращает полный состав корзины с описанием товаров, промо-кодом и суммами. Полномочия - только аутентифицированные."
+      parameters:
+        - name: page
+          in: query
+          description: A page number within the paginated result set.
+          required: false
+          type: integer
+      responses:
+        '200':
+          description: 'Корзина существует, возвращаем объект'
+          schema:
+            required:
+              - count
+              - results
+            type: object
+            properties:
+              count:
+                type: integer
+              next:
+                type: string
+                format: uri
+                x-nullable: true
+              previous:
+                type: string
+                format: uri
+                x-nullable: true
+              results:
+                type: array
+                items:
+                  $ref: '#/definitions/CartList'
+        '401':
+          description: 'Пользователь не авторизован'
+      tags:
+        - carts
+    parameters: []
+  /to-cart/:
+    get:
+      operationId: to-cart_list
+      summary: Возвращает содержимое корзины.
+      description: 'Возвращает содержимое корзины по токену.'
+      parameters:
+        - name: page
+          in: query
+          description: A page number within the paginated result set.
+          required: false
+          type: integer
+      responses:
+        '200':
+          description: 'Вернули содержимое'
+          schema:
+            required:
+              - count
+              - results
+            type: object
+            properties:
+              count:
+                type: integer
+              next:
+                type: string
+                format: uri
+                x-nullable: true
+              previous:
+                type: string
+                format: uri
+                x-nullable: true
+              results:
+                type: array
+                items:
+                  $ref: '#/definitions/GoodsInCart2'
+      tags:
+        - to-cart
+    post:
+      operationId: to-cart_create
+      summary: Добавление в корзину
+      description: 'Добавление в корзину товаров по токену.'
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/GoodsInCart'
+      responses:
+        '201':
+          description: 'Добавлено.'
+          schema:
+            $ref: '#/definitions/GoodsInCart'
+      tags:
+        - to-cart
+    parameters: []
+  /cat-create/:
+    post:
+      operationId: cat-create_create
+      summary: Создание категории
+      description: "Создание категорий. Полномочия - только администратор. Родителя можно указать по id"
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/CategoryOps'
+      responses:
+        '201':
+          description: 'Категория создана.Возвращает переданные значения'
+          schema:
+            $ref: '#/definitions/CategoryOps'
+        '401':
+          description: 'Пользователь не авторизован'
+        '403':
+          description: 'Недостаточно полномочий'
+      tags:
+        - cat-create
+    parameters: []
+  /cat-ops/{id}:
+    get:
+      operationId: cat-ops_read
+      summary: Категория по id
+      description: "Информация о категории. Полномочия - только администратор."
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/CategoryOps'
+        '401':
+          description: 'Пользователь не авторизован'
+          schema:
+            $ref: '#/definitions/CategoryOps'
+        '403':
+          description: 'Недостаточно полномочий'
+          schema:
+            $ref: '#/definitions/CategoryOps'
+        '404':
+          description: 'Категории не существует'
+          schema:
+            $ref: '#/definitions/CategoryOps'
+      tags:
+        - cat-ops
+    put:
+      operationId: cat-ops_update
+      summary: Полное редактирование категории
+      description: "Полное редактирование категорий. Полномочия - только администратор. Родителя передавать по id"
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/CategoryOps'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/CategoryOps'
+            
+        '401':
+          description: 'Пользователь не авторизован'
+          schema:
+            $ref: '#/definitions/CategoryOps'
+        '403':
+          description: 'Недостаточно полномочий'
+          schema:
+            $ref: '#/definitions/CategoryOps'
+        '404':
+          description: 'Категории не существует'
+          schema:
+            $ref: '#/definitions/CategoryOps'
+      tags:
+        - cat-ops
+    patch:
+      operationId: cat-ops_partial_update
+      summary: Частичное редактирование категории
+      description: "Частичное редактирование категории. Полномочия - только администратор. Родителя передавать по id"
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/CategoryOps'
+      responses:
+        '200':
+          description: 'Категория отредактирована. Возвращает значения'
+          schema:
+            $ref: '#/definitions/CategoryOps'
+        '401':
+          description: 'Пользователь не авторизован'
+          schema:
+            $ref: '#/definitions/CategoryOps'
+        '403':
+          description: 'Недостаточно полномочий'
+          schema:
+            $ref: '#/definitions/CategoryOps'
+        '404':
+          description: 'Категории не существует'
+          schema:
+            $ref: '#/definitions/CategoryOps'
+      tags:
+        - cat-ops
+    delete:
+      operationId: cat-ops_delete
+      summary: Удаление категории
+      description: "Удаление категории. Полномочия - только администратор"
+      parameters: []
+      responses:
+        '204':
+          description: 'Категория удалена'
+        '401':
+          description: 'Пользователь не авторизован'
+          schema:
+            $ref: '#/definitions/CategoryOps'
+        '403':
+          description: 'Недостаточно полномочий'
+          schema:
+            $ref: '#/definitions/CategoryOps'
+        '404':
+          description: 'Категории не существует'
+          schema:
+            $ref: '#/definitions/CategoryOps'
+      tags:
+        - cat-ops
+    parameters:
+      - name: id
+        in: path
+        description: "A unique integer value identifying this \u041A\u0430\u0442\u0435\
+          \u0433\u043E\u0440\u0438\u044F."
+        required: true
+        type: integer
+  /category/:
+    get:
+      operationId: category_list
+      summary: Список категорий
+      description: "Список категорий. Полномочия - кто угодно."
+      parameters:
+        - name: page
+          in: query
+          description: A page number within the paginated result set.
+          required: false
+          type: integer
+      responses:
+        '200':
+          description: 'Возвращает список категорий'
+          schema:
+            required:
+              - count
+              - results
+            type: object
+            properties:
+              count:
+                type: integer
+              next:
+                type: string
+                format: uri
+                x-nullable: true
+              previous:
+                type: string
+                format: uri
+                x-nullable: true
+              results:
+                type: array
+                items:
+                  $ref: '#/definitions/CategoryList'
+      tags:
+        - category
+    parameters: []
+  /comments/:
+    get:
+      operationId: comments_list
+      summary: Список комментариев
+      description: "Список всех комментариев. Полномочия - кто угодно"
+      parameters:
+        - name: page
+          in: query
+          description: A page number within the paginated result set.
+          required: false
+          type: integer
+      responses:
+        '200':
+          description: 'Возвращает список комментариев'
+          schema:
+            required:
+              - count
+              - results
+            type: object
+            properties:
+              count:
+                type: integer
+              next:
+                type: string
+                format: uri
+                x-nullable: true
+              previous:
+                type: string
+                format: uri
+                x-nullable: true
+              results:
+                type: array
+                items:
+                  $ref: '#/definitions/CommentAll'
+      tags:
+        - comments
+    post:
+      operationId: comments_create
+      summary: Создание коммента
+      description: "Создание коммента. Полномочия - только аутентифицированные."
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/MainCommentAll'
+      responses:
+        '201':
+          description: 'Создан.'
+          schema:
+            $ref: '#/definitions/MainCommentAll'
+      tags:
+        - comments
+    parameters: []
+  /comments/{id}:
+    get:
+      operationId: comments_read
+      summary: Список комментов
+      description: "\u0421\u043F\u0438\u0441\u043E\u043A \u0432\u0441\u0435\u0445\
+        \ \u043A\u043E\u043C\u043C\u0435\u043D\u0442\u0430\u0440\u0438\u0435\u0432"
+      parameters:
+        - name: page
+          in: query
+          description: A page number within the paginated result set.
+          required: false
+          type: integer
+      responses:
+        '200':
+          description: ''
+          schema:
+            required:
+              - count
+              - results
+            type: object
+            properties:
+              count:
+                type: integer
+              next:
+                type: string
+                format: uri
+                x-nullable: true
+              previous:
+                type: string
+                format: uri
+                x-nullable: true
+              results:
+                type: array
+                items:
+                  $ref: '#/definitions/CommentAll'
+      tags:
+        - comments
+    post:
+      operationId: sub_comments_create
+      summary: Создание дочернего коммента
+      description: "Создание дочернего коммента"
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/SubCommentAll'
+      responses:
+        '201':
+          description: 'Создан'
+          schema:
+            $ref: '#/definitions/CommentAll'
+      tags:
+        - comments
+    parameters:
+      - name: id
+        in: path
+        description: "ID комментария-родителя"
+        required: true
+        type: integer
+  /comment-ops/{id}:
+    get:
+      operationId: comment-ops_read
+      summary: Пост по id
+      description: 'Возвращает коммент по id. Полномочия - кто угодно.'
+      parameters: []
+      responses:
+        '200':
+          description: 'Возвращает коммент.'
+          schema:
+            $ref: '#/definitions/CommentAll'
+        '404':
+          description: 'Коммент не существует.'
+      tags:
+        - comment-ops
+    put:
+      operationId: comment-ops_update
+      summary: Полное редактирование коммента 
+      description: 'Полное редактирование коммента. Полномочия - только аутентифицированные.'
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/CommentAll'
+      responses:
+        '200':
+          description: 'Отредактирован.'
+          schema:
+            $ref: '#/definitions/CommentAll'
+        '404':
+          description: 'Коммент не существует.'
+      tags:
+        - comment-ops
+    patch:
+      operationId: comment-ops_partial_update
+      summary: Частичное редактирование коммента
+      description: 'Частичное редактирование коммента. Полномочия - только аутентифицированные.'
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/CommentAll'
+      responses:
+        '200':
+          description: 'Отредактирован.'
+          schema:
+            $ref: '#/definitions/CommentAll'
+        '404':
+          description: 'Коммент не существует.'
+      tags:
+        - comment-ops
+    delete:
+      operationId: comment-ops_delete
+      summary: Удаление коммента
+      description: 'Удаление коммента. Полномочия - только аутентифицированные.'
+      parameters: []
+      responses:
+        '204':
+          description: 'Удалён.'
+        '404':
+          description: 'Коммент не существует.'
+      tags:
+        - comment-ops
+    parameters:
+      - name: id
+        in: path
+        description: "A unique integer value identifying this \u041A\u043E\u043C\u043C\
+          \u0435\u043D\u0442\u0430\u0440\u0438\u0439."
+        required: true
+        type: integer
+  /comments/post_id={post}:
+    get:
+      operationId: Sub_comments_read
+      summary: Комменты по посту
+      description: ''
+      parameters:
+        - name: page
+          in: query
+          description: A page number within the paginated result set.
+          required: false
+          type: integer
+      responses:
+        '200':
+          description: ''
+          schema:
+            required:
+              - count
+              - results
+            type: object
+            properties:
+              count:
+                type: integer
+              next:
+                type: string
+                format: uri
+                x-nullable: true
+              previous:
+                type: string
+                format: uri
+                x-nullable: true
+              results:
+                type: array
+                items:
+                  $ref: '#/definitions/CommentOps'
+      tags:
+        - comments
+    parameters:
+      - name: post
+        in: path
+        required: true
+        type: integer
+  /favorite/:
+    get:
+      operationId: favorite_list
+      summary: Список избранного
+      description: "Возвращает список избранных товаров пользователя по токену. Полномочия - только аутентифицированные."
+      parameters:
+        - name: page
+          in: query
+          description: A page number within the paginated result set.
+          required: false
+          type: integer
+      responses:
+        '200':
+          description: ''
+          schema:
+            required:
+              - count
+              - results
+            type: object
+            properties:
+              count:
+                type: integer
+              next:
+                type: string
+                format: uri
+                x-nullable: true
+              previous:
+                type: string
+                format: uri
+                x-nullable: true
+              results:
+                type: array
+                items:
+                  $ref: '#/definitions/FavoriteGoodsList'
+      tags:
+        - favorite
+    post:
+      operationId: favorite_create
+      summary: Добавление товара в избранное
+      description: "Добавление товара в избранное к пользователю по токену. Полномочия - только аутентифицированные."
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              good:
+                type: integer
+                format: uri
+                x-nullable: true
+      responses:
+        '201':
+          description: 'Успешно добавлено'
+        '401':
+          description: 'Пользователь не авторизирован'
+        '404':
+          description: 'Товар с указанным id не найден'
+      tags:
+        - favorite
+    parameters: []
+  /favorite/{id}:
+    delete:
+      operationId: favorite_delete
+      summary: Удаление из избранного
+      description: "Удаляет товар из избранного по токену"
+      parameters:
+        - name: page
+          in: query
+          description: A page number within the paginated result set.
+          required: false
+          type: integer
+      responses:
+        '204':
+          description: 'Товар удалён'
+        '404':
+          description: 'Товар не в избранном'
+      tags:
+        - favorite
+    parameters:
+      - name: id
+        in: path
+        description: "ID товара"
+        required: true
+        type: integer
+  /goods-ops/{id}:
+    get:
+      operationId: goods-ops_read
+      summary: Товар по id
+      description: "Возвращает товар по id. Полномочия - только администратор"
+      parameters: []
+      responses:
+        '200':
+          description: 'Возвращает описание товара'
+          schema:
+            $ref: '#/definitions/GoodsList'
+        '401':
+          description: 'Пользователь не авторизован'
+          schema:
+            $ref: '#/definitions/GoodsList'
+        '403':
+          description: 'Недостаточно полномочий'
+          schema:
+            $ref: '#/definitions/GoodsList'
+        '404':
+          description: 'Категории не существует'
+          schema:
+            $ref: '#/definitions/GoodsList'
+      tags:
+        - goods-ops
+    put:
+      operationId: goods-ops_update
+      summary: Полное редактирование товара
+      description: "Полное редактирование товара. Полномочия - только администратор"
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/GoodsList'
+      responses:
+        '200':
+          description: 'Товар отредактирован. Возвращает новые значения'
+          schema:
+            $ref: '#/definitions/GoodsList'
+        '401':
+          description: 'Пользователь не авторизован'
+          schema:
+            $ref: '#/definitions/GoodsList'
+        '403':
+          description: 'Недостаточно полномочий'
+          schema:
+            $ref: '#/definitions/GoodsList'
+        '404':
+          description: 'Товара не существует'
+          schema:
+            $ref: '#/definitions/GoodsList'
+      tags:
+        - goods-ops
+    patch:
+      operationId: goods-ops_partial_update
+      summary: Частичное редактирование товара
+      description: "Частичное редактирование товара. Полномочия - только администратор"
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/GoodsList'
+      responses:
+        '200':
+          description: 'Товар отредактирован. Возвращает новые значения'
+          schema:
+            $ref: '#/definitions/GoodsList'
+        '401':
+          description: 'Пользователь не авторизован'
+          schema:
+            $ref: '#/definitions/GoodsList'
+        '403':
+          description: 'Недостаточно полномочий'
+          schema:
+            $ref: '#/definitions/GoodsList'
+        '404':
+          description: 'Товара не существует'
+          schema:
+            $ref: '#/definitions/GoodsList'
+      tags:
+        - goods-ops
+    delete:
+      operationId: goods-ops_delete
+      summary: Удаление товара
+      description: "Удаляет товар. Полномочия - только администратор"
+      parameters: []
+      responses:
+        '204':
+          description: 'Товар удалён'
+        '401':
+          description: 'Пользователь не авторизован'
+        '403':
+          description: 'Недостаточно полномочий'
+        '404':
+          description: 'Товара не существует'
+      tags:
+        - goods-ops
+    parameters:
+      - name: id
+        in: path
+        description: "A unique integer value identifying this \u0422\u043E\u0432\u0430\
+          \u0440."
+        required: true
+        type: integer
+  /goods/:
+    get:
+      operationId: goods_list
+      summary: Список товаров
+      description: "Список всех товаров. Полномочия - только администратор"
+      parameters:
+        - name: page
+          in: query
+          description: A page number within the paginated result set.
+          required: false
+          type: integer
+      responses:
+        '200':
+          description: 'Возвращает список всех товаров'
+          schema:
+            required:
+              - count
+              - results
+            type: object
+            properties:
+              count:
+                type: integer
+              next:
+                type: string
+                format: uri
+                x-nullable: true
+              previous:
+                type: string
+                format: uri
+                x-nullable: true
+              results:
+                type: array
+                items:
+                  $ref: '#/definitions/GoodsAll'
+      tags:
+        - goods
+    post:
+      operationId: goods_create
+      summary: Создать товар
+      description: "Список всех товаров. Полномочия - только администратор"
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/GoodsAll'
+      responses:
+        '201':
+          description: 'Товар создан. Возвращает значения'
+          schema:
+            $ref: '#/definitions/GoodsAll'
+      tags:
+        - goods
+    parameters: []
+  /goods-random/:
+    get:
+      operationId: goods-random_list
+      summary: Три случайных товара
+      description: 'Возвращает три случайных товара, без токена.'
+      parameters:
+        - name: page
+          in: query
+          description: A page number within the paginated result set.
+          required: false
+          type: integer
+      responses:
+        '200':
+          description: 'Вернули.'
+          schema:
+            required:
+              - count
+              - results
+            type: object
+            properties:
+              count:
+                type: integer
+              next:
+                type: string
+                format: uri
+                x-nullable: true
+              previous:
+                type: string
+                format: uri
+                x-nullable: true
+              results:
+                type: array
+                items:
+                  $ref: '#/definitions/GoodsAll'
+      tags:
+        - goods-random
+    parameters: []
+  /goods/category={category}:
+    get:
+      operationId: goods_read
+      summary: Товары по категориям
+      description: 'Возвращает товары по категориям через параметр url. Полномочий - кто угодно.'
+      parameters:
+        - name: page
+          in: query
+          description: A page number within the paginated result set.
+          required: false
+          type: integer
+        - name: page_size
+          in: query
+          description: Number of results to return per page.
+          required: false
+          type: integer
+      responses:
+        '200':
+          description: 'Возвращаем категории'
+          schema:
+            required:
+              - count
+              - results
+            type: object
+            properties:
+              count:
+                type: integer
+              next:
+                type: string
+                format: uri
+                x-nullable: true
+              previous:
+                type: string
+                format: uri
+                x-nullable: true
+              results:
+                type: array
+                items:
+                  $ref: '#/definitions/GoodsAll'
+      tags:
+        - goods
+    parameters:
+      - name: category
+        in: path
+        required: true
+        type: integer
+  /promo/:
+    get:
+      operationId: carts_list_get
+      summary: Получение информации корзины
+      description: "Возвращает ID корзины пользователя по токену. Полномочия - только аутентифицированные."
+      parameters:
+        - name: page
+          in: query
+          description: A page number within the paginated result set.
+          required: false
+          type: integer
+      responses:
+        '200':
+          description: 'Корзина существует, возвращаем объект'
+          schema:
+            required:
+              - count
+              - results
+            type: object
+            properties:
+              count:
+                type: integer
+              next:
+                type: string
+                format: uri
+                x-nullable: true
+              previous:
+                type: string
+                format: uri
+                x-nullable: true
+              results:
+                type: array
+                items:
+                  $ref: '#/definitions/CartList'
+        '401':
+          description: 'Пользователь не авторизован'
+      tags:
+        - promo
+    post:
+      operationId: promo
+      summary: Промо-код
+      description: "Применить промо-код к корзине"
+      parameters:
+        - name: data
+          in: body
+          description: A page number within the paginated result set.
+          required: true
+          schema:
+            properties:
+              promo_code:
+                type: string
+      responses:
+        '200':
+          description: 'Промо-код применён'
+        '400':
+          description: "Промо-код не найден"
+      tags:
+        - promo
+    parameters: []
+  /order-history/:
+    get:
+      operationId: order-history_list
+      summary: История заказов
+      description: 'История заказов по токену'
+      parameters:
+        - name: page
+          in: query
+          description: A page number within the paginated result set.
+          required: false
+          type: integer
+      responses:
+        '200':
+          description: ''
+          schema:
+            required:
+              - count
+              - results
+            type: object
+            properties:
+              count:
+                type: integer
+              next:
+                type: string
+                format: uri
+                x-nullable: true
+              previous:
+                type: string
+                format: uri
+                x-nullable: true
+              results:
+                type: array
+                items:
+                  $ref: '#/definitions/OrderHistory'
+      tags:
+        - order-history
+    parameters: []
+  /order-history/{id}:
+    get:
+      operationId: order-history_read
+      summary: Состав заказа
+      description: 'Возвращает состав заказа по его ID'
+      parameters:
+        - name: page
+          in: query
+          description: A page number within the paginated result set.
+          required: false
+          type: integer
+      responses:
+        '200':
+          description: 'Заказ найден'
+          schema:
+            required:
+              - count
+              - results
+            type: object
+            properties:
+              count:
+                type: integer
+              next:
+                type: string
+                format: uri
+                x-nullable: true
+              previous:
+                type: string
+                format: uri
+                x-nullable: true
+              results:
+                type: array
+                items:
+                  $ref: '#/definitions/GoodsInCart3'
+        '500':
+          description: 'ID заказа не существует'
+      tags:
+        - order-history
+    parameters:
+      - name: id
+        in: path
+        required: true
+        type: integer
+  /order/:
+    post:
+      operationId: order_create
+      summary: Оформлениие заказа
+      description: 'Оформление в заказ текущей корзины'
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/Order'
+      responses:
+        '201':
+          description: 'Оформлено'
+          schema:
+            $ref: '#/definitions/Order'
+      tags:
+        - order
+    parameters: []
+  /post-create/:
+    post:
+      operationId: post-create_create
+      summary: Создание поста
+      description: "Создание поста. Полномочия - только администратор."
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/PostCreate'
+      responses:
+        '201':
+          description: 'Пост создан. Возвращает значения нового поста'
+          schema:
+            $ref: '#/definitions/PostCreate'
+        '400':
+          description: 'Одно из значений не валидно. Вернёт некорректное значение или их список'
+        '401':
+          description: 'Пользователь не авторизован'
+        '403':
+          description: 'Недостаточно полномочий'
+      tags:
+        - post-create
+    parameters: []
+  /post-ops/{id}:
+    get:
+      operationId: post-ops_read
+      summary: Пост по id
+      description: "Возвращает пост по id. Полномочия - только администратор"
+      parameters: []
+      responses:
+        '200':
+          description: 'Возвращает значения поста'
+          schema:
+            $ref: '#/definitions/PostOps'
+        '400':
+          description: 'Одно из значений не валидно. Вернёт некорректное значение или их список'
+        '401':
+          description: 'Пользователь не авторизован'
+        '403':
+          description: 'Недостаточно полномочий'
+        '404':
+          description: 'Поста не существует'
+      tags:
+        - post-ops
+    put:
+      operationId: post-ops_update
+      summary: Полное редактирование поста
+      description: "Полное редактирование поста"
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/PostOps'
+      responses:
+        '200':
+          description: 'Пост отредактирован. Возвращает его значения.'
+          schema:
+            $ref: '#/definitions/PostOps'
+        '400':
+          description: 'Одно из значений не валидно. Вернёт некорректное значение или их список'
+        '401':
+          description: 'Пользователь не авторизован'
+        '403':
+          description: 'Недостаточно полномочий'
+        '404':
+          description: 'Поста не существует'
+      tags:
+        - post-ops
+    patch:
+      operationId: post-ops_partial_update
+      summary: Частичное редактирование поста
+      description: "Частичное редактирование поста. Полномочия - только администратор"
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/PostOps'
+      responses:
+        '200':
+          description: 'Пост отредактирован. Возвращает значения поста'
+          schema:
+            $ref: '#/definitions/PostOps'
+        '400':
+          description: 'Одно из значений не валидно. Вернёт некорректное значение или их список'
+        '401':
+          description: 'Пользователь не авторизован'
+        '403':
+          description: 'Недостаточно полномочий'
+        '404':
+          description: 'Поста не существует'
+      tags:
+        - post-ops
+    delete:
+      operationId: post-ops_delete
+      summary: Удаление поста
+      description: "Удаление поста. Полномочия - только администратор."
+      parameters: []
+      responses:
+        '204':
+          description: 'Пост удалён'
+        '401':
+          description: 'Пользователь не авторизован'
+        '403':
+          description: 'Недостаточно полномочий'
+        '404':
+          description: 'Поста не существует'
+      tags:
+        - post-ops
+    parameters:
+      - name: id
+        in: path
+        description: "A unique integer value identifying this ('\u041F\u043E\u0441\
+          \u0442',)."
+        required: true
+        type: integer
+  /posts/:
+    get:
+      operationId: post_list
+      summary: Список постов
+      description: "Список постов. Полномочия - кто угодно."
+      parameters:
+        - name: page
+          in: query
+          description: A page number within the paginated result set.
+          required: false
+          type: integer
+      responses:
+        '200':
+          description: 'Список постов'
+          schema:
+            required:
+              - count
+              - results
+            type: object
+            properties:
+              count:
+                type: integer
+              next:
+                type: string
+                format: uri
+                x-nullable: true
+              previous:
+                type: string
+                format: uri
+                x-nullable: true
+              results:
+                type: array
+                items:
+                  $ref: '#/definitions/PostAll'
+      tags:
+        - post
+    parameters: []
+  /rest-auth/login/:
+    post:
+      operationId: rest-auth_login_create
+      summary: Логин
+      description: "Проверяет логин и пароль и возвращает токен, если аутентификация успешно пройдена. Время жизни токена - 14 дней. Полномочия - кто угодно.Токен подставлять нужно в headers - Authorization: Token aa65ec809fba5c53ca2eccb4407c16849ca36a2a "
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/Login'
+      responses:
+        '200':
+          description: 'Возвращает токен и информацию о пользователе( id, имя юзера, почту, имя и фамилию).'
+          schema:
+            type: object
+            properties:
+              token:
+                type: string
+                format: uri
+                x-nullable: true
+              user:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    username:
+                      type: string
+        '400':
+          description: 'Учётные данные не верны  или пользователь заблокирован.'
+        '403':
+          description: 'Токен не предоставлен, время жизни токена истекло.'
+      tags:
+        - rest-auth
+    parameters: []
+  /rest-auth/logout/:
+    post:
+      operationId: rest-auth_logout_create
+      summary: Логаут
+      description: Выход из учётки. Токен пользователя удаляется.
+      parameters: []
+      responses:
+        '200':
+          description: 'Успешно вышли'
+      tags:
+        - rest-auth
+    parameters: []
+  /rest-auth/password/change/:
+    post:
+      operationId: rest-auth_password_change_create
+      summary: Изменение пароля
+      description: Изменение пароля пользователя. Принимает new_password1 и new_password2. Полномочия - только аутентифицированные.
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/PasswordChange'
+      responses:
+        '200':
+          description: 'Пароль успешно изменён'
+        '400':
+          description: 'Пароли не совпадают или введённые данные не валидны.'
+      tags:
+        - rest-auth
+    parameters: []
+  /rest-auth/password/reset/:
+    post:
+      operationId: rest-auth_password_reset_create
+      summary: Сброс пароля
+      description: "Сброс пароля пользователя. Проверка существования почты в бд и соответствие почты пользователю не проверяется! Полномочия - кто угодно."
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/PasswordReset'
+      responses:
+        '200':
+          description: 'Письмо отправлено'
+        '400':
+          description: 'Почта не валидна'
+      tags:
+        - rest-auth
+    parameters: []
+  /rest-auth/password/reset/confirm/:
+    post:
+      operationId: rest-auth_password_reset_confirm_create
+      summary: Подтверждение сброса пароля
+      description: Пользователю на почту приходит ссылка в письме формата example.com/reset/MTI/5f7-2349ec60ebae07d30179/, где MTI - uid, а 5f7-2349ec60ebae07d30179 - токен.
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/PasswordResetConfirm'
+      responses:
+        '200':
+          description: 'Пароль сброшен'
+        '400':
+          description: 'UID или токен не валидны.'
+      tags:
+        - rest-auth
+    parameters: []
+  /rest-auth/registration/:
+    post:
+      operationId: rest-auth_registration_create
+      summary: Регистрация
+      description: 'Регистрация пользователя.'
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/Register'
+      responses:
+        '201':
+          description: 'Пользователь зарегистрирован'
+        '400':
+          description: 'Введённые поля не валидны.'
+        '500':
+            description: 'smtp-сервер не доступен.'
+      tags:
+        - rest-auth
+    parameters: []
+  /rest-auth/registration/verify-email/:
+    post:
+      operationId: rest-auth_registration_verify-email
+      summary: Подтверждение почты
+      description: 'Подтверждение почты'
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              key:
+                type: string
+                x-nullable: false
+      responses:
+        '200':
+          description: "Почта подтверждена"
+        '404':
+          description: "Некорректный токен"
+      tags:
+        - rest-auth
+  /rest-auth/user/:
+    get:
+      operationId: rest-auth_user_read
+      summary: Информация о пользователе
+      description: "Возвращает id пользователя, логин, почту, имя и фамилию. Полномочия - только аутентифицированные."
+      parameters: []
+      responses:
+        '200':
+          description: 'Возвращает данные пользователя.'
+          schema:
+            $ref: '#/definitions/UserDetails'
+        '401':
+          description: 'Пользователь не авторизован'
+      tags:
+        - rest-auth
+    put:
+      operationId: rest-auth_user_update
+      summary: Изменение данных пользователя
+      description: "Полное изменение данных пользователя. Id и почта не изменяются. Полномочия - только аутентифицированные."
+      parameters: []
+      responses:
+        '200':
+          description: 'Возвращает данные пользователя.'
+          schema:
+            $ref: '#/definitions/UserDetails'
+        '401':
+          description: 'Пользователь не авторизован'
+      tags:
+        - rest-auth
+    patch:
+      operationId: rest-auth_user_partial_update
+      summary: Частичное изменение данных пользователя
+      description: "Частичное изменение данных пользователя. Id и почта не изменяются. Полномочия - только аутентифицированные."
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/UserDetails'
+      responses:
+        '200':
+          description: 'Данные изменены. Возвращает значения.'
+          schema:
+            $ref: '#/definitions/UserDetails'
+        '401':
+          description: 'Пользователь не авторизован'
+      tags:
+        - rest-auth
+    parameters: []
+definitions:
+  Cart:
+    required:
+      - goods
+    type: object
+    properties:
+      id:
+        title: ID
+        type: integer
+        readOnly: true
+      customer:
+        title: Customer
+        type: integer
+        readOnly: true
+      comment:
+        title: "\u041A\u043E\u043C\u043C\u0435\u043D\u0442\u0430\u0440\u0438\u0439\
+          \ \u043A \u0437\u0430\u043A\u0430\u0437\u0443"
+        type: string
+        maxLength: 1000
+        x-nullable: true
+      goods:
+        type: array
+        items:
+          title: "\u0422\u043E\u0432\u0430\u0440\u044B \u0432 \u043A\u043E\u0440\u0437\
+            \u0438\u043D\u0435"
+          type: integer
+        uniqueItems: true
+  OrderHistory:
+    type: object
+    properties:
+      id:
+        title: ID
+        type: integer
+        readOnly: true
+      date:
+        title: "\u0414\u0430\u0442\u0430 \u0437\u0430\u043A\u0430\u0437\u0430"
+        type: string
+        format: date-time
+      amount:
+        title: "\u041E\u0431\u0449\u0430\u044F \u0441\u0443\u043C\u043C\u0430 \u0437\
+          \u0430\u043A\u0430\u0437\u0430"
+        type: integer
+  Order:
+    required: 
+    - comment
+    - promo_code
+    type: object
+    properties:
+      id:
+        title: ID
+        type: integer
+        readOnly: true
+      amount:
+        title: Amount
+        type: integer
+        readOnly: true
+      date:
+        title: Date
+        type: string
+        format: date-time
+        readOnly: true
+      accepted:
+        title: Accepted
+        type: boolean
+        readOnly: true
+      cart:
+        title: Cart
+        type: integer
+        readOnly: true
+      comment:
+        title: "\u041A\u043E\u043C\u043C\u0435\u043D\u0442\u0430\u0440\u0438\u0439\
+          \ \u043A \u0437\u0430\u043A\u0430\u0437\u0443"
+        type: string
+        maxLength: 1000
+        minLength: 1
+        x-nullable: true
+  CartList:
+    required:
+      - promo_code
+    type: object
+    properties:
+      amount_items:
+        title: amount_items
+        type: integer
+        readOnly: true
+      promo_code:
+        $ref: '#/definitions/PromoCode'
+      promo_price:
+        title: promo_price
+        type: integer
+      goods:
+        $ref: '#/definitions/GoodsInCart2'
+  PromoCode:
+    type: object
+    properties:
+      id:
+        title: id
+        type: integer
+        readOnly: true
+      name:
+        title: name
+        type: string
+        readOnly: true
+      description:
+        title: description
+        type: string
+      discount_value:
+        title: discount_value
+        type: integer
+  GoodsInCart:
+    required:
+      - cart
+    type: object
+    properties:
+      id:
+        title: ID
+        type: integer
+        readOnly: true
+      amount:
+        title: Amount
+        type: integer
+        readOnly: true
+      quantity:
+        title: "\u0415\u0434\u0438\u043D\u0438\u0446 \u0442\u043E\u0432\u0430\u0440\
+          \u0430"
+        type: integer
+      good:
+        title: "\u0422\u043E\u0432\u0430\u0440"
+        type: integer
+  GoodsInCart4:
+    type: object
+    properties:
+      amount:
+        title: Amount
+        type: integer
+        readOnly: true
+      quantity:
+        title: "Количество"
+        type: integer
+  GoodsDescriptionInCart:
+    title: Good
+    required:
+      - name
+    type: object
+    properties:
+      id:
+        title: ID
+        type: integer
+        readOnly: true
+      name:
+        title: Name
+        type: string
+        maxLength: 1000
+        minLength: 1
+      short_text:
+        title: "\u041A\u0440\u0430\u0442\u043A\u043E\u0435 \u043E\u043F\u0438\u0441\
+          \u0430\u043D\u0438\u0435"
+        type: string
+        maxLength: 100
+        minLength: 1
+        x-nullable: true
+      photo:
+        title: "\u0418\u0437\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u044F"
+        type: string
+        readOnly: true
+        x-nullable: true
+        format: uri
+  GoodsDescriptionInCart2:
+    title: Good
+    required:
+      - name
+    type: object
+    properties:
+      id:
+        title: ID
+        type: integer
+        readOnly: true
+      name:
+        title: Name
+        type: string
+        maxLength: 1000
+        minLength: 1
+      short_text:
+        title: "\u041A\u0440\u0430\u0442\u043A\u043E\u0435 \u043E\u043F\u0438\u0441\
+          \u0430\u043D\u0438\u0435"
+        type: string
+        maxLength: 100
+        minLength: 1
+        x-nullable: true
+      price:
+        title: "\u0426\u0435\u043D\u0430"
+        type: integer
+      photo:
+        title: Photo
+        type: string
+        readOnly: true
+        format: uri
+  GoodsInCart2:
+    required:
+      - good
+      - cart
+    type: object
+    properties:
+      amount:
+        title: Amount
+        type: integer
+        readOnly: true
+      good:
+        $ref: '#/definitions/GoodsDescriptionInCart'
+      quantity:
+        title: "\u0415\u0434\u0438\u043D\u0438\u0446 \u0442\u043E\u0432\u0430\u0440\
+          \u0430"
+        type: integer
+      cart:
+        title: "\u0422\u043E\u0432\u0430\u0440 \u0432 \u043A\u043E\u0440\u0437\u0438\
+          \u043D\u0435"
+        type: integer
+  GoodsInCart3:
+    required:
+      - good
+      - cart
+    type: object
+    properties:
+      id:
+        title: ID
+        type: integer
+        readOnly: true
+      amount:
+        title: Amount
+        type: integer
+        readOnly: true
+      good:
+        $ref: '#/definitions/GoodsDescriptionInCart2'
+      quantity:
+        title: "\u0415\u0434\u0438\u043D\u0438\u0446 \u0442\u043E\u0432\u0430\u0440\
+          \u0430"
+        type: integer
+        minimum: 1
+      cart:
+        title: "\u0422\u043E\u0432\u0430\u0440 \u0432 \u043A\u043E\u0440\u0437\u0438\
+          \u043D\u0435"
+        type: integer
+  CategoryOps:
+    required:
+      - name
+    type: object
+    properties:
+      id:
+        title: ID
+        type: integer
+        readOnly: true
+      name:
+        title: "\u0418\u043C\u044F"
+        type: string
+        maxLength: 100
+        minLength: 1
+      description:
+        title: "\u041E\u043F\u0438\u0441\u0430\u043D\u0438\u0435 \u043A\u0430\u0442\
+          \u0435\u0433\u043E\u0440\u0438\u0438"
+        type: string
+        maxLength: 1000
+      published:
+        title: "\u041E\u0442\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u0435\
+          \ \u043A\u0430\u0442\u0435\u0433\u043E\u0440\u0438\u0438"
+        type: boolean
+      parent:
+        title: Parent_category
+        type: integer
+        x-nullable: true
+  CategoryParent:
+    title: Parent
+    required:
+      - name
+    type: object
+    properties:
+      id:
+        title: ID
+        type: integer
+        readOnly: true
+      name:
+        title: "\u0418\u043C\u044F"
+        type: string
+        maxLength: 100
+        minLength: 1
+  CategoryList:
+    required:
+      - name
+      - parent
+    type: object
+    properties:
+      id:
+        title: ID
+        type: integer
+        readOnly: true
+      name:
+        title: "\u0418\u043C\u044F"
+        type: string
+        maxLength: 100
+        minLength: 1
+      description:
+        title: "\u041E\u043F\u0438\u0441\u0430\u043D\u0438\u0435 \u043A\u0430\u0442\
+          \u0435\u0433\u043E\u0440\u0438\u0438"
+        type: string
+        maxLength: 1000
+      published:
+        title: "\u041E\u0442\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u0435\
+          \ \u043A\u0430\u0442\u0435\u0433\u043E\u0440\u0438\u0438"
+        type: boolean
+      parent:
+        $ref: '#/definitions/CategoryParent'
+  SubCommentAll:
+    required:
+      - text
+      - author
+    type: object
+    properties:
+      id:
+        title: ID
+        type: integer
+        readOnly: true
+      text:
+        title: Text
+        type: string
+        maxLength: 1000
+        minLength: 1
+      created_date:
+        title: Created date
+        type: string
+        format: date-time
+        readOnly: true
+      moderation:
+        title: Moderation
+        type: boolean
+      author:
+        title: "\u0410\u0432\u0442\u043E\u0440"
+        type: integer
+      post:
+        title: "\u041F\u043E\u0441\u0442\u044B"
+        type: integer
+        readOnly: true
+      parent_comment:
+        title: "Родительский комментарий"
+        type: integer
+        x-nullable: true
+        readOnly: true
+  CommentAll:
+    required:
+      - text
+      - author
+      - post
+    type: object
+    properties:
+      id:
+        title: ID
+        type: integer
+        readOnly: true
+      text:
+        title: Text
+        type: string
+        maxLength: 1000
+        minLength: 1
+      created_date:
+        title: Created date
+        type: string
+        format: date-time
+        readOnly: true
+      moderation:
+        title: Moderation
+        type: boolean
+      author:
+        title: "\u0410\u0432\u0442\u043E\u0440"
+        type: integer
+      post:
+        title: "\u041F\u043E\u0441\u0442\u044B"
+        type: integer
+      child_comment:
+        title: "Дочерний комментарий"
+        type: integer
+        x-nullable: true
+  MainCommentAll:
+    required:
+      - text
+      - author
+      - post
+    type: object
+    properties:
+      id:
+        title: ID
+        type: integer
+        readOnly: true
+      text:
+        title: Text
+        type: string
+        maxLength: 1000
+        minLength: 1
+      created_date:
+        title: Created date
+        type: string
+        format: date-time
+        readOnly: true
+      moderation:
+        title: Moderation
+        type: boolean
+      author:
+        title: "\u0410\u0432\u0442\u043E\u0440"
+        type: integer
+      post:
+        title: "\u041F\u043E\u0441\u0442\u044B"
+        type: integer
+      child_comment:
+        title: "Дочерний комментарий"
+        type: integer
+        readOnly: true
+        x-nullable: true
+  CommentOps:
+    required:
+      - author
+      - text
+      - post
+    type: object
+    properties:
+      id:
+        title: ID
+        type: integer
+        readOnly: true
+      author:
+        title: Author
+        type: string
+        minLength: 1
+      text:
+        title: Text
+        type: string
+        maxLength: 1000
+        minLength: 1
+      created_date:
+        title: Created date
+        type: string
+        format: date-time
+        readOnly: true
+      moderation:
+        title: Moderation
+        type: boolean
+      post:
+        title: "\u041F\u043E\u0441\u0442\u044B"
+        type: integer
+      child_comment:
+        title: "Дочерний комментарий"
+        type: integer
+        x-nullable: true
+  FavoriteGoodsList:
+    required:
+      - good
+    type: object
+    properties:
+      good:
+        type: array
+        items:
+          $ref: '#/definitions/GoodsList'
+  GoodsList:
+    required:
+      - name
+      - manufacturer
+      - description
+      - category
+      - slug
+    type: object
+    properties:
+      name:
+        title: Name
+        type: string
+        maxLength: 1000
+        minLength: 1
+      in_cart:
+        title: in_cart
+        type: boolean
+        readOnly: true
+      in_favorite:
+        title: in_favorite
+        type: boolean
+        readOnly: true
+      manufacturer:
+        title: Manufacturer
+        type: string
+        maxLength: 1000
+        minLength: 1
+      issue_year:
+        title: "\u0413\u043E\u0434 \u0432\u044B\u043F\u0443\u0441\u043A\u0430"
+        type: integer
+        x-nullable: true
+      sort:
+        title: "\u0421\u043E\u0440\u0442\u0438\u0440\u043E\u0432\u043A\u0430 \u043F\
+          \u043E \u043F\u0440\u0438\u043E\u0440\u0438\u0442\u0435\u0442\u0443"
+        type: integer
+      published_date:
+        title: "\u0414\u0430\u0442\u0430 \u043F\u0443\u0431\u043B\u0438\u043A\u0430\
+          \u0446\u0438\u0438"
+        type: string
+        format: date-time
+        x-nullable: true
+      photo:
+        title: "\u0418\u0437\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u044F"
+        type: string
+        readOnly: true
+        x-nullable: true
+        format: uri
+      left:
+        title: "\u041E\u0441\u0442\u0430\u0442\u043E\u0447\u043D\u043E\u043A \u043A\
+          \u043E\u043B\u0438\u0447\u0435\u0441\u0442\u0432\u043E"
+        type: integer
+      description:
+        title: Description
+        type: string
+        maxLength: 1000
+        minLength: 1
+      price:
+        title: "\u0426\u0435\u043D\u0430"
+        type: integer
+      discount:
+        title: "\u0421\u043A\u0438\u0434\u043A\u0430"
+        type: integer
+      category:
+        title: "\u041A\u0430\u0442\u0435\u0433\u043E\u0440\u0438\u044F"
+        type: integer
+      slug:
+        title: Url
+        type: string
+        format: slug
+        pattern: ^[-a-zA-Z0-9_]+$
+        maxLength: 30
+        minLength: 1
+      short_text:
+        title: short_text
+        type: string
+        maxLength: 100
+        minLength: 1
+  GoodsAll:
+    required:
+      - name
+      - manufacturer
+      - description
+      - slug
+      - category
+    type: object
+    properties:
+      id:
+        title: ID
+        type: integer
+        readOnly: true
+      published_date:
+        title: Published date
+        type: string
+        format: date-time
+        default: '2020-03-28T08:40:17.206965Z'
+      name:
+        title: Name
+        type: string
+        maxLength: 1000
+        minLength: 1
+      in_cart:
+        title: in_cart
+        type: boolean
+        readOnly: true
+      in_favorite:
+        title: in_favorite
+        type: boolean
+        readOnly: true
+      manufacturer:
+        title: Manufacturer
+        type: string
+        maxLength: 1000
+        minLength: 1
+      issue_year:
+        title: "\u0413\u043E\u0434 \u0432\u044B\u043F\u0443\u0441\u043A\u0430"
+        type: integer
+        x-nullable: true
+      sort:
+        title: "\u0421\u043E\u0440\u0442\u0438\u0440\u043E\u0432\u043A\u0430 \u043F\
+          \u043E \u043F\u0440\u0438\u043E\u0440\u0438\u0442\u0435\u0442\u0443"
+        type: integer
+      photo:
+        title: "\u0418\u0437\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u044F"
+        type: string
+        readOnly: true
+        x-nullable: true
+        format: uri
+      left:
+        title: "\u041E\u0441\u0442\u0430\u0442\u043E\u0447\u043D\u043E\u043A \u043A\
+          \u043E\u043B\u0438\u0447\u0435\u0441\u0442\u0432\u043E"
+        type: integer
+      description:
+        title: Description
+        type: string
+        maxLength: 1000
+        minLength: 1
+      price:
+        title: "\u0426\u0435\u043D\u0430"
+        type: integer
+      discount:
+        title: "\u0421\u043A\u0438\u0434\u043A\u0430"
+        type: integer
+      slug:
+        title: Url
+        type: string
+        format: slug
+        pattern: ^[-a-zA-Z0-9_]+$
+        maxLength: 30
+        minLength: 1
+      category:
+        title: "\u041A\u0430\u0442\u0435\u0433\u043E\u0440\u0438\u044F"
+        type: integer
+      short_text:
+        title: short_text
+        type: string
+        maxLength: 100
+        minLength: 1
+  PostCreate:
+    required:
+      - title
+      - category
+      - text
+      - slug
+    type: object
+    properties:
+      title:
+        title: Title
+        type: string
+        maxLength: 1000
+        minLength: 1
+      category:
+        title: "\u041A\u0430\u0442\u0435\u0433\u043E\u0440\u0438\u044F"
+        type: integer
+      text:
+        title: Text
+        type: string
+        maxLength: 3000
+        minLength: 1
+      slug:
+        title: Slug
+        type: string
+        format: slug
+        pattern: ^[-a-zA-Z0-9_]+$
+        maxLength: 15
+        minLength: 1
+      created_date:
+        title: Created date
+        type: string
+        format: date-time
+        readOnly: true
+        default: '2020-03-28T08:40:17.219231Z'
+      edit_date:
+        title: Edit date
+        type: string
+        format: date-time
+        readOnly: true
+        default: '2020-03-28T08:40:17.219940Z'
+      published_date:
+        title: Published date
+        type: string
+        format: date-time
+        default: '2020-03-28T08:40:17.220518Z'
+      published:
+        title: "\u041E\u043F\u0443\u0431\u043B\u0438\u043A\u043E\u0432\u0430\u043D\
+          ?"
+        type: boolean
+      status:
+        title: "\u0414\u043B\u044F \u0437\u0430\u0440\u0435\u0433\u0438\u0441\u0442\
+          \u0440\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0445"
+        type: boolean
+  PostOps:
+    required:
+      - title
+      - category
+      - text
+      - slug
+    type: object
+    properties:
+      author:
+        title: "\u0410\u0432\u0442\u043E\u0440"
+        type: integer
+        x-nullable: true
+      title:
+        title: Title
+        type: string
+        maxLength: 1000
+        minLength: 1
+      category:
+        title: "\u041A\u0430\u0442\u0435\u0433\u043E\u0440\u0438\u044F"
+        type: integer
+      text:
+        title: Text
+        type: string
+        maxLength: 3000
+        minLength: 1
+      image:
+        title: "\u0418\u0437\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u044F"
+        type: string
+        readOnly: true
+        x-nullable: true
+        format: uri
+      slug:
+        title: Slug
+        type: string
+        format: slug
+        pattern: ^[-a-zA-Z0-9_]+$
+        maxLength: 15
+        minLength: 1
+      published:
+        title: "\u041E\u043F\u0443\u0431\u043B\u0438\u043A\u043E\u0432\u0430\u043D\
+          ?"
+        type: boolean
+      status:
+        title: "\u0414\u043B\u044F \u0437\u0430\u0440\u0435\u0433\u0438\u0441\u0442\
+          \u0440\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0445"
+        type: boolean
+  PostAll:
+    required:
+      - title
+      - text
+      - slug
+      - category
+    type: object
+    properties:
+      id:
+        title: ID
+        type: integer
+        readOnly: true
+      title:
+        title: Title
+        type: string
+        maxLength: 1000
+        minLength: 1
+      text:
+        title: Text
+        type: string
+        maxLength: 3000
+        minLength: 1
+      short_text:
+        title: "\u041A\u0440\u0430\u0442\u043A\u043E\u0435 \u043E\u043F\u0438\u0441\
+          \u0430\u043D\u0438\u0435"
+        type: string
+        maxLength: 1000
+        x-nullable: true
+      image:
+        title: "\u0418\u0437\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u044F"
+        type: string
+        readOnly: true
+        x-nullable: true
+        format: uri
+      published:
+        title: "\u041E\u043F\u0443\u0431\u043B\u0438\u043A\u043E\u0432\u0430\u043D\
+          ?"
+        type: boolean
+      viewed:
+        title: "\u041F\u0440\u043E\u0441\u043C\u043E\u0442\u0440\u044B"
+        type: integer
+      status:
+        title: "\u0414\u043B\u044F \u0437\u0430\u0440\u0435\u0433\u0438\u0441\u0442\
+          \u0440\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0445"
+        type: boolean
+      sort:
+        title: "\u0421\u043E\u0440\u0442\u0438\u0440\u043E\u0432\u043A\u0430 \u043F\
+          \u043E \u043F\u0440\u0438\u043E\u0440\u0438\u0442\u0435\u0442\u0443"
+        type: integer
+      author:
+        title: "\u0410\u0432\u0442\u043E\u0440"
+        type: string
+        x-nullable: true
+      category:
+        title: "\u041A\u0430\u0442\u0435\u0433\u043E\u0440\u0438\u044F"
+        type: string
+  Login:
+    required:
+      - password
+    type: object
+    properties:
+      username:
+        title: Username
+        type: string
+      email:
+        title: Email
+        type: string
+        format: email
+      password:
+        title: Password
+        type: string
+        minLength: 1
+  PasswordChange:
+    required:
+      - new_password1
+      - new_password2
+    type: object
+    properties:
+      new_password1:
+        title: New password1
+        type: string
+        maxLength: 128
+        minLength: 1
+      new_password2:
+        title: New password2
+        type: string
+        maxLength: 128
+        minLength: 1
+  PasswordReset:
+    required:
+      - email
+    type: object
+    properties:
+      email:
+        title: Email
+        type: string
+        format: email
+        minLength: 1
+  PasswordResetConfirm:
+    required:
+      - new_password1
+      - new_password2
+      - uid
+      - token
+    type: object
+    properties:
+      new_password1:
+        title: New password1
+        type: string
+        maxLength: 128
+        minLength: 1
+      new_password2:
+        title: New password2
+        type: string
+        maxLength: 128
+        minLength: 1
+      uid:
+        title: Uid
+        type: string
+        minLength: 1
+      token:
+        title: Token
+        type: string
+        minLength: 1
+  Register:
+    required:
+      - username
+      - email
+      - password1
+      - password2
+    type: object
+    properties:
+      username:
+        title: Username
+        type: string
+        maxLength: 150
+        minLength: 4
+      email:
+        title: Email
+        type: string
+        format: email
+        minLength: 1
+      password1:
+        title: Password1
+        type: string
+        minLength: 1
+      password2:
+        title: Password2
+        type: string
+        minLength: 1
+  VerifyEmail:
+    type: object
+  UserDetails:
+    required:
+      - username
+    type: object
+    properties:
+      pk:
+        title: ID
+        type: integer
+        readOnly: true
+      username:
+        title: "\u0418\u043C\u044F \u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\
+          \u0442\u0435\u043B\u044F"
+        description: "\u041E\u0431\u044F\u0437\u0430\u0442\u0435\u043B\u044C\u043D\
+          \u043E\u0435 \u043F\u043E\u043B\u0435. \u041D\u0435 \u0431\u043E\u043B\u0435\
+          \u0435 150 \u0441\u0438\u043C\u0432\u043E\u043B\u043E\u0432. \u0422\u043E\
+          \u043B\u044C\u043A\u043E \u0431\u0443\u043A\u0432\u044B, \u0446\u0438\u0444\
+          \u0440\u044B \u0438 \u0441\u0438\u043C\u0432\u043E\u043B\u044B @/./+/-/_."
+        type: string
+        pattern: ^[\w.@+-]+$
+        maxLength: 150
+        minLength: 1
+      email:
+        title: "\u0410\u0434\u0440\u0435\u0441 \u044D\u043B\u0435\u043A\u0442\u0440\
+          \u043E\u043D\u043D\u043E\u0439 \u043F\u043E\u0447\u0442\u044B"
+        type: string
+        format: email
+        readOnly: true
+        minLength: 1
+      first_name:
+        title: "\u0418\u043C\u044F"
+        type: string
+        maxLength: 30
+      last_name:
+        title: "\u0424\u0430\u043C\u0438\u043B\u0438\u044F"
+        type: string
+        maxLength: 150
