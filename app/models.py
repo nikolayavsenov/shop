@@ -1,4 +1,4 @@
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import IntegrityError
 from django.db.transaction import TransactionManagementError
 from django.urls import reverse
@@ -110,6 +110,7 @@ class Comment(models.Model):
         return str(self.post)
 
     class Meta:
+        ordering = ['author']
         verbose_name = "Комментарий"
         verbose_name_plural = "Комментарии"
 
@@ -117,7 +118,7 @@ class Comment(models.Model):
 class Goods(models.Model):
     name = models.TextField(max_length=1000)
     manufacturer = models.TextField(max_length=1000)
-    issue_year = models.PositiveIntegerField('Год выпуска', null=True, blank=True)  #допилить, не отображается при сериализации
+    issue_year = models.PositiveIntegerField('Год выпуска', null=True, blank=True)
     sort = models.PositiveIntegerField("Сортировка по приоритету", default=10)
     published_date = models.DateTimeField(
             "Дата публикации",
@@ -129,7 +130,7 @@ class Goods(models.Model):
     left = models.PositiveIntegerField('Остаточнок количество', default=0)
     description = models.TextField(max_length=1000)
     price = models.PositiveIntegerField('Цена', default=0)
-    discount = models.PositiveSmallIntegerField('Скидка', default=0) #допилить, не отображается при сериализации
+    discount = models.PositiveSmallIntegerField('Скидка', default=0)
     category = models.ForeignKey(
         Category,
         verbose_name='Категория',
@@ -147,6 +148,25 @@ class Goods(models.Model):
         verbose_name_plural = "Товары"
 
 
+class PromoCode(models.Model):
+    name = models.CharField('Название промо кода', max_length=20)
+    description = models.CharField('Описание промо кода', max_length=1000)
+    start_date = models.DateTimeField(default=timezone.now)
+    expiration_date = models.DateTimeField('Дата истечения действия', null=True, blank=True)
+    discount_value = models.SmallIntegerField(
+        'Скидка',
+        default=0,
+    )
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        ordering = ['-expiration_date']
+        verbose_name = 'Промо код'
+        verbose_name_plural = 'Промо коды'
+
+
 class Cart(models.Model):
     customer = models.ForeignKey(
         User,
@@ -154,6 +174,30 @@ class Cart(models.Model):
         on_delete=models.CASCADE,
     )
     accepted = models.BooleanField("Принято к заказу", default=False)
+    promo_code = models.ForeignKey(
+        PromoCode,
+        related_name='discount',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL
+    )
+
+    def get_goods(self):
+        return GoodsInCart.objects.filter(cart=self.pk)
+
+    @property
+    def amount_items(self):
+        total = 0
+        for items in GoodsInCart.objects.filter(cart=self):
+            total += items.amount
+        return total
+
+    @property
+    def promo_price(self):
+        if self.promo_code is not None:
+            return self.amount_items-self.promo_code.discount_value
+        else:
+            return None
 
     def __str__(self):
         return str(self.customer)
@@ -167,10 +211,12 @@ class GoodsInCart(models.Model):
     good = models.ForeignKey(
         Goods,
         verbose_name='Товар',
-        on_delete=models.CASCADE
+        related_name='cart_goods',
+        on_delete=models.DO_NOTHING,
     )
     cart = models.ForeignKey(
         Cart,
+        related_name='goods_cart',
         verbose_name="Товар в корзине",
         on_delete=models.CASCADE
     )
@@ -181,36 +227,20 @@ class GoodsInCart(models.Model):
     amount = models.PositiveIntegerField('Общая сумма', default=0)
 
     class Meta:
+        ordering = ['cart']
+        """"Проверка уникальности товара в рамках одной корзины"""
+        constraints = [
+            models.UniqueConstraint(fields=['good', 'cart'], name='goods unique')
+        ]
         verbose_name = 'Товар в корзине'
         verbose_name_plural = 'Товары в корзине'
 
     def save(self, *args, **kwargs):
-        self.amount = self.quantity*self.good.price
+        self.amount = self.quantity * (self.good.price-self.good.discount)
         super().save(*args, **kwargs)
 
     def __str__(self):
         return str(self.cart)
-
-
-class PromoCode(models.Model):
-    name = models.CharField('Название промо кода', max_length=20)
-    description = models.CharField('Описание промо кода', max_length=1000)
-    start_date = models.DateTimeField(default=timezone.now)
-    expiration_date = models.DateTimeField('Дата истечения действия')
-    goods = models.ManyToManyField(
-        Goods,
-        verbose_name='Промо код для товара',
-        related_name='promo_goods',
-    )
-    discount_value = models.SmallIntegerField('Размер скидки в %', default=0)
-
-    def __str__(self):
-        return self.name
-
-    class Meta:
-        ordering = ['-expiration_date']
-        verbose_name = 'Промо код'
-        verbose_name_plural = 'Промо коды'
 
 
 class FavoriteGood(models.Model):
@@ -219,30 +249,49 @@ class FavoriteGood(models.Model):
         verbose_name='В избранном у пользователя',
         on_delete=models.CASCADE
     )
-    good = models.ManyToManyField(
+    good = models.OneToOneField(
         Goods,
+        on_delete=models.CASCADE,
         verbose_name='Товар в избранном',
+        unique=True
     )
 
     class Meta:
-        verbose_name = 'Избранный товар',
-        verbose_name_plural = 'Избранные товары',
+        ordering = ['-client']
+        verbose_name = 'Избранный товар'
+        verbose_name_plural = 'Избранные товары'
+
+    def __str__(self):
+        return str(self.client)
 
 
 class Order(models.Model):
     cart = models.ForeignKey(Cart, verbose_name='Корзина', on_delete=models.CASCADE)
     comment = models.CharField(verbose_name="Комментарий к заказу", max_length=1000, null=True)
-    accepted = models.BooleanField(verbose_name="Заказ выполнен", default=False)
+    done = models.BooleanField(verbose_name="Заказ выполнен", default=False)
     date = models.DateTimeField('Дата заказа', default=timezone.now)
-    amount = models.IntegerField('Общая сумма заказа', default=0)
-
+    amount = models.PositiveIntegerField('Итоговая сумма заказа', default=0)
+    receiver_name = models.CharField("Имя и отчетство получателя", max_length=70, null=True)
+    receiver_surname = models.CharField('Фамилия', max_length=100, null=True)
+    receiver_mail = models.EmailField('Почта получателя', null=True)
+    is_save_info = models.BooleanField('Сохранить информацию заказа', default=False)
+    delivery_address = models.CharField('Адрес доставки', max_length=1000, null=True)
+    
     def save(self, *args, **kwargs):
-        for item in GoodsInCart.objects.filter(cart=self.cart):
-            self.amount += item.amount
-        current_cart = self.cart
-        current_cart.accepted = True
-        current_cart.save()
+        self.amount = self.cart.amount_items
+        if self.cart.promo_code is not None:
+            self.amount -= self.cart.promo_code.discount_value
+        self.cart.accepted = True
+        self.cart.save()
         super().save(*args, **kwargs)
+
+    def __str__(self):
+        return str(self.cart)
+
+    class Meta:
+        ordering = ['cart']
+        verbose_name = 'Заказ'
+        verbose_name_plural = 'Заказы'
 
 
 @receiver(post_save, sender=User)
@@ -253,3 +302,17 @@ def create_cart(sender, instance, created, **kwargs):
         blank_cart.customer = User.objects.get(username=instance)
         #blank_cart.good = ""
         blank_cart.save()
+
+
+# @receiver(post_save, sender=GoodsInCart)
+# def update_cart_amount(instance, **kwargs):
+#     cart = Cart.objects.get(customer__username=instance, accepted=False)
+#     goods = GoodsInCart.objects.filter(cart=cart)
+#     total = 0
+#     for items in goods:
+#         total += items.amount
+#     cart.total_amount = total
+#     cart.save()
+
+
+
