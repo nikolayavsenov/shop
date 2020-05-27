@@ -1,15 +1,4 @@
-idea
 .idea
+db.sqlite3
 venv
-*.__pycache__
-media
-templates
-newenv
-*.save
-static
-*.__pycache__/*
-*.sqlite3
-*/__pycache__/*
-*/migrations/*
-/mag/__pycache__
-/app/migrations/__pycache__
+app/static
