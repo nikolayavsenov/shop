@@ -237,7 +237,7 @@ class TestGoods(APITestCase):
             format='json'
         )
         self.assertEqual(request.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(request.data), 14)
+        self.assertEqual(len(request.data), 15)
         data = {'name': 'new_test_name'}
         request = self.client.patch(
             reverse('good_edit', args=[good['id']]),
@@ -401,7 +401,7 @@ class OrderTest(APITestCase):
             'delivery_address': 'test_address',
             'receiver_name': 'test_name'
         }
-        response = self.client.popyst(
+        response = self.client.post(
             reverse('add_order'),
             data,
             format='json'

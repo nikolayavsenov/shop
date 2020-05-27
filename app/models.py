@@ -247,16 +247,18 @@ class FavoriteGood(models.Model):
     client = models.ForeignKey(
         User,
         verbose_name='В избранном у пользователя',
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
     )
-    good = models.OneToOneField(
+    good = models.ForeignKey(
         Goods,
         on_delete=models.CASCADE,
-        verbose_name='Товар в избранном',
-        unique=True
+        verbose_name='Товар в избранном'
     )
 
     class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['client', 'good'], name='favorite unique')
+        ]
         ordering = ['-client']
         verbose_name = 'Избранный товар'
         verbose_name_plural = 'Избранные товары'

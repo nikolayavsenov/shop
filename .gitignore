@@ -11,3 +11,5 @@ static
 *.sqlite3
 */__pycache__/*
 */migrations/*
+/mag/__pycache__
+/app/migrations/__pycache__

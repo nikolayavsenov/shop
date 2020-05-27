@@ -168,6 +168,7 @@ class GoodsListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Goods
         fields = (
+            'id',
             'name',
             'in_cart',
             'in_favorite',

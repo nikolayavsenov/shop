@@ -80,8 +80,12 @@ WSGI_APPLICATION = 'mag.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'shop',
+        'USER': 'postgres',
+        'PASSWORD': '342089',
+        'HOST': '127.0.0.1',
+        'PORT': '5432',
     }
 }
 
@@ -122,7 +126,7 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
-
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 10240
 STATIC_URL = '/static/'
 STATIC_ROOT = 'static/'
 MEDIA_URL = '/media/'
