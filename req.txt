@@ -1,3 +1,4 @@
+wheel
 amqp==2.5.2
 asgiref==3.2.7
 billiard==3.6.3.0
