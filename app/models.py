@@ -9,6 +9,7 @@ from django.dispatch import receiver
 from allauth.account.signals import email_confirmed
 from django.db.models.signals import post_save, post_init
 from rest_framework.fields import CurrentUserDefault
+from django.db.models import Q
 
 
 class Category(MPTTModel):
@@ -75,8 +76,15 @@ class Post(models.Model):
     status = models.BooleanField("Для зарегистрированных", default=False)
     sort = models.PositiveIntegerField("Сортировка по приоритету", default=10)
 
+    @property
+    def comments_count(self):
+        count = Comment.objects.filter(
+            Q(post=self) | Q(child_comment__post=self)).count()
+        return count
+
     def __str__(self):
         return self.title
+
 
     class Meta:
         verbose_name = "Пост",
@@ -300,21 +308,9 @@ class Order(models.Model):
 def create_cart(sender, instance, created, **kwargs):
     """Создаём пустую корзину для пользователя при успешной регистрации."""
     if created:
-        blank_cart = Cart()
-        blank_cart.customer = User.objects.get(username=instance)
-        #blank_cart.good = ""
-        blank_cart.save()
+        Cart.objects.create(customer=instance)
 
 
-# @receiver(post_save, sender=GoodsInCart)
-# def update_cart_amount(instance, **kwargs):
-#     cart = Cart.objects.get(customer__username=instance, accepted=False)
-#     goods = GoodsInCart.objects.filter(cart=cart)
-#     total = 0
-#     for items in goods:
-#         total += items.amount
-#     cart.total_amount = total
-#     cart.save()
 
 
 

@@ -81,7 +81,7 @@ WSGI_APPLICATION = 'mag.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'shop',
+        'NAME': 'test',
         'USER': 'postgres',
         'PASSWORD': '342089',
         'HOST': '127.0.0.1',

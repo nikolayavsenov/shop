@@ -3,7 +3,6 @@ from rest_framework.response import Response
 from rest_framework import generics, permissions
 from .serializers import *
 from .paginations import PostPagination
-from api.temp import *
 
 
 def goods_context(user):
@@ -36,7 +35,6 @@ class GoodsList(generics.ListCreateAPIView):
     pagination_class = PostPagination
 
     def get_serializer_context(self):
-        trgre()
         return goods_context(self.request.user)
 
 
@@ -148,6 +146,14 @@ class PostOperations(generics.RetrieveUpdateDestroyAPIView):
     queryset = Post.objects.all().select_related('author')
     lookup_field = 'id'
     serializer_class = PostOpsSerializer
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        if request.method == 'GET':
+            instance.viewed += 1
+            instance.save()
+        return Response(serializer.data)
 
 
 class CartList(generics.ListAPIView):

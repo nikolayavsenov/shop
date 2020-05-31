@@ -32,6 +32,7 @@ class PostAllSerializer(serializers.ModelSerializer):
             'sort',
             'author',
             'category',
+            'created_date',
                   )
 
 
@@ -157,7 +158,11 @@ class PostOpsSerializer(serializers.ModelSerializer):
             'slug',
             'published',
             'status',
+            'created_date',
+            'viewed',
+            'comments_count',
         )
+        read_only_fields = ('created_date', 'viewed', 'comments_count')
 
 
 class GoodsListSerializer(serializers.ModelSerializer):

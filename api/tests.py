@@ -154,7 +154,7 @@ class PostsTests(APITestCase):
             "title": "test_post",
             "text": "test_text",
             "slug": "test_slug",
-            "category": 1}
+            "category": category.id}
         request = self.client.post(
             reverse('post_create'),
             data,
@@ -173,7 +173,7 @@ class PostsTests(APITestCase):
             format='json'
         )
         self.assertEqual(request.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(request.data), 8)
+        self.assertEqual(len(request.data), 10)
         data = {'text': 'new_test_text'}
         request = self.client.patch(
             reverse('post_edit', args=[post['id']]),
@@ -207,12 +207,12 @@ class TestGoods(APITestCase):
         user = create_user(self.client)
         category = create_category()
         data = {
-            'name': 'test_good_name',
-            'manufacturer': 'test_man',
-            'category': 1,
-            'short_text': 'test_short',
-            'slug': 'test_slug',
-            'description': 'test_desc'
+            "name": "test_good_name",
+            "manufacturer": "test_man",
+            "category": category.id,
+            "short_text": "test_short",
+            "slug": "test_slug",
+            "description": "test_desc"
         }
         request = self.client.post(
             reverse('good_create'),
